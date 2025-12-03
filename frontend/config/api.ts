@@ -3,6 +3,11 @@
  * 
  * Centralized configuration for API endpoints.
  * Automatically detects environment and uses appropriate backend URL.
+ * 
+ * Features:
+ * - Dynamic URL detection (Vercel/localhost)
+ * - Timeout handling for Render free tier (server sleep)
+ * - "Server waking up" status detection
  */
 
 // Production backend URL (Render)
@@ -10,6 +15,10 @@ const PRODUCTION_API_URL = 'https://seyda-matematik-api.onrender.com';
 
 // Development backend URL (Local)
 const DEVELOPMENT_API_URL = 'http://localhost:5001';
+
+// Timeout settings (Render free tier can take up to 60s to wake up)
+export const API_TIMEOUT_MS = 60000; // 60 seconds
+export const SERVER_WAKE_THRESHOLD_MS = 5000; // Show "waking up" message after 5 seconds
 
 /**
  * Determines if we're running in production environment
@@ -200,5 +209,176 @@ export const getAuthToken = (): string | null => {
   }
   return null;
 };
+
+// ============================================
+// ROBUST FETCH WITH TIMEOUT & SERVER WAKE-UP
+// ============================================
+
+/**
+ * API Response type for robust fetch
+ */
+export interface ApiResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  isServerWaking?: boolean;
+  isTimeout?: boolean;
+}
+
+/**
+ * Fetch with timeout - aborts request after specified time
+ */
+const fetchWithTimeout = async (
+  url: string,
+  options: RequestInit,
+  timeoutMs: number = API_TIMEOUT_MS
+): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
+/**
+ * Robust API fetch with timeout handling and server wake-up detection
+ * 
+ * @param endpoint - API endpoint (e.g., '/api/contact')
+ * @param options - Fetch options
+ * @param onServerWaking - Callback when server appears to be waking up
+ * @returns ApiResult with data or error
+ * 
+ * @example
+ * const result = await apiFetch('/api/contact', {
+ *   method: 'POST',
+ *   body: JSON.stringify(data)
+ * }, () => setIsServerWaking(true));
+ */
+export const apiFetch = async <T>(
+  endpoint: string,
+  options: RequestInit = {},
+  onServerWaking?: () => void
+): Promise<ApiResult<T>> => {
+  const url = buildApiUrl(endpoint);
+  const startTime = Date.now();
+  
+  // Set up wake-up detection
+  let wakeUpTimeout: NodeJS.Timeout | null = null;
+  if (onServerWaking) {
+    wakeUpTimeout = setTimeout(() => {
+      onServerWaking();
+    }, SERVER_WAKE_THRESHOLD_MS);
+  }
+  
+  const fetchOptions: RequestInit = {
+    ...defaultFetchOptions,
+    ...options,
+    headers: {
+      ...defaultFetchOptions.headers,
+      ...options.headers,
+    },
+  };
+  
+  try {
+    console.log(`📡 API Request: ${options.method || 'GET'} ${url}`);
+    
+    const response = await fetchWithTimeout(url, fetchOptions, API_TIMEOUT_MS);
+    
+    // Clear wake-up timeout
+    if (wakeUpTimeout) clearTimeout(wakeUpTimeout);
+    
+    const elapsed = Date.now() - startTime;
+    console.log(`✅ API Response: ${response.status} (${elapsed}ms)`);
+    
+    // Handle HTTP errors
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        error: errorData.message || `Sunucu hatası: ${response.status}`,
+        isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
+      };
+    }
+    
+    const data = await response.json();
+    return {
+      success: true,
+      data: data.data || data,
+      isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
+    };
+    
+  } catch (error: any) {
+    // Clear wake-up timeout
+    if (wakeUpTimeout) clearTimeout(wakeUpTimeout);
+    
+    const elapsed = Date.now() - startTime;
+    console.error(`❌ API Error (${elapsed}ms):`, error);
+    
+    // Handle abort (timeout)
+    if (error.name === 'AbortError') {
+      return {
+        success: false,
+        error: 'Bağlantı zaman aşımına uğradı. Sunucu yanıt vermiyor.',
+        isTimeout: true,
+        isServerWaking: true,
+      };
+    }
+    
+    // Handle network errors
+    if (error.name === 'TypeError' || error.message?.includes('fetch')) {
+      return {
+        success: false,
+        error: 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.',
+        isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.message || 'Beklenmeyen bir hata oluştu.',
+    };
+  }
+};
+
+/**
+ * Check if the API server is awake/healthy
+ * Useful for showing "server waking up" message proactively
+ */
+export const checkServerHealth = async (): Promise<boolean> => {
+  try {
+    const response = await fetchWithTimeout(
+      buildApiUrl(API_ENDPOINTS.HEALTH),
+      { method: 'GET' },
+      10000 // 10 second timeout for health check
+    );
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Log current API configuration (for debugging)
+ */
+export const logApiConfig = (): void => {
+  console.log('🔧 API Configuration:');
+  console.log('  - Base URL:', API_URL);
+  console.log('  - Environment:', isProduction() ? 'Production' : 'Development');
+  console.log('  - Timeout:', API_TIMEOUT_MS / 1000, 'seconds');
+};
+
+// Log config on load (development only)
+if (typeof window !== 'undefined' && !isProduction()) {
+  logApiConfig();
+}
 
 export default API_URL;

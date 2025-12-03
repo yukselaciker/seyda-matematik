@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Instagram, Linkedin, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
-import { API_URL, API_ENDPOINTS } from '../config/api';
+import { Mail, Phone, MapPin, Instagram, Linkedin, CheckCircle, Loader2, AlertCircle, Clock } from 'lucide-react';
+import { API_ENDPOINTS, apiFetch } from '../config/api';
 
 const Contact: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isServerWaking, setIsServerWaking] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('sending');
     setErrorMessage('');
+    setIsServerWaking(false);
     
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
@@ -22,48 +24,35 @@ const Contact: React.FC = () => {
       message: formData.get('message') as string,
     };
 
-    try {
-      // Send to backend API
-      const response = await fetch(`${API_URL}${API_ENDPOINTS.CONTACT}`, {
+    // Use robust apiFetch with timeout and server wake-up detection
+    const result = await apiFetch<{ id: string }>(
+      API_ENDPOINTS.CONTACT,
+      {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(contactData)
-      });
+        body: JSON.stringify(contactData),
+      },
+      () => setIsServerWaking(true) // Called if server takes > 5 seconds
+    );
 
-      const data = await response.json();
-
-      if (data.success) {
-        // Success - form submitted and email sent
-        setFormStatus('success');
-        form.reset();
-        
-        console.log('✅ Contact form submitted successfully:', data.data.id);
-        
-        // Reset to idle after 5 seconds
-        setTimeout(() => {
-          setFormStatus('idle');
-        }, 5000);
-      } else {
-        // Validation errors from backend
-        setFormStatus('error');
-        
-        if (data.errors && data.errors.length > 0) {
-          // Show first validation error
-          setErrorMessage(data.errors[0].message);
-        } else {
-          setErrorMessage(data.message || 'Mesajınız gönderilemedi.');
-        }
-        
-        console.error('❌ Validation errors:', data.errors);
-      }
-
-    } catch (error: any) {
-      // Network or server error
-      console.error('❌ Contact form error:', error);
+    if (result.success) {
+      // Success - form submitted and email sent
+      setFormStatus('success');
+      setIsServerWaking(false);
+      form.reset();
+      
+      console.log('✅ Contact form submitted successfully');
+      
+      // Reset to idle after 5 seconds
+      setTimeout(() => {
+        setFormStatus('idle');
+      }, 5000);
+    } else {
+      // Error occurred
       setFormStatus('error');
-      setErrorMessage('Sunucu ile bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.');
+      setIsServerWaking(false);
+      setErrorMessage(result.error || 'Mesajınız gönderilemedi.');
+      
+      console.error('❌ Contact form error:', result.error);
     }
   };
 
@@ -252,9 +241,16 @@ const Contact: React.FC = () => {
                   className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-xl"
                 >
                   {formStatus === 'sending' ? (
-                    <span className="flex items-center">
-                      <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                      Gönderiliyor...
+                    <span className="flex items-center flex-col sm:flex-row">
+                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                      {isServerWaking ? (
+                        <span className="text-sm">
+                          <Clock className="inline w-4 h-4 mr-1" />
+                          Sunucu uyanıyor, lütfen bekleyin...
+                        </span>
+                      ) : (
+                        'Gönderiliyor...'
+                      )}
                     </span>
                   ) : '📩 Mesajı Gönder'}
                 </button>

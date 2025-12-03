@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Calendar, User, BookOpen, CheckCircle, Loader2, AlertCircle, Mail, Phone, Sun, Sunset, Moon } from 'lucide-react';
-import { API_URL, API_ENDPOINTS } from '../config/api';
+import { X, Calendar, User, BookOpen, CheckCircle, Loader2, AlertCircle, Mail, Phone, Sun, Sunset, Moon, Clock } from 'lucide-react';
+import { API_ENDPOINTS, apiFetch } from '../config/api';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -12,6 +12,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [isServerWaking, setIsServerWaking] = useState(false);
 
   if (!isOpen) return null;
 
@@ -25,6 +26,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
     setLoading(true);
     setErrorMessage(null);
+    setIsServerWaking(false);
 
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
@@ -60,45 +62,36 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
       email,
       phone,
       message: detailedMessage,
-      // Backend şu an bu alanları zorunlu tutmuyor ama ileride filtre için kullanılabilir
       source: 'demo_lesson',
       preferredDate: date,
       preferredTimeSlot: selectedTime,
       grade,
-    } as any;
+    };
 
-    try {
-      const response = await fetch(`${API_URL}${API_ENDPOINTS.CONTACT}`, {
+    // Use robust apiFetch with timeout and server wake-up detection
+    const result = await apiFetch<{ id: string }>(
+      API_ENDPOINTS.CONTACT,
+      {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
-      });
+      },
+      () => setIsServerWaking(true) // Called if server takes > 5 seconds
+    );
 
-      const data = await response.json();
-
-      if (data.success) {
-        setStep('success');
-        form.reset();
-        setSelectedTime('');
-        console.log('✅ Demo ders talebi backend üzerinden iletildi:', data.data?.id);
-      } else {
-        console.error('❌ Demo ders talebi doğrulama hatası:', data.errors || data.message);
-        setErrorMessage(
-          (data.errors && data.errors[0]?.message) ||
-          data.message ||
-          'Talebiniz gönderilemedi. Lütfen daha sonra tekrar deneyin.'
-        );
-        setStep('error');
-      }
-    } catch (error: any) {
-      console.error('❌ Demo ders talebi gönderim hatası:', error);
-      setErrorMessage('Sunucuya bağlanırken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.');
+    if (result.success) {
+      setStep('success');
+      form.reset();
+      setSelectedTime('');
+      setIsServerWaking(false);
+      console.log('✅ Demo ders talebi backend üzerinden iletildi');
+    } else {
+      console.error('❌ Demo ders talebi hatası:', result.error);
+      setErrorMessage(result.error || 'Talebiniz gönderilemedi. Lütfen daha sonra tekrar deneyin.');
       setStep('error');
-    } finally {
-      setLoading(false);
+      setIsServerWaking(false);
     }
+    
+    setLoading(false);
   };
 
   const today = new Date().toISOString().split('T')[0];
@@ -269,7 +262,17 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                           disabled={loading}
                           className="inline-flex w-full justify-center rounded-xl bg-indigo-600 px-3 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all transform active:scale-95"
                         >
-                          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Randevu Oluştur'}
+                          {loading ? (
+                            <span className="flex items-center gap-2">
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                              {isServerWaking ? (
+                                <span className="text-xs">
+                                  <Clock className="inline w-3 h-3 mr-1" />
+                                  Sunucu uyanıyor...
+                                </span>
+                              ) : 'Gönderiliyor...'}
+                            </span>
+                          ) : 'Randevu Oluştur'}
                         </button>
                         <button
                           type="button"

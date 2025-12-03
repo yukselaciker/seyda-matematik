@@ -212,3 +212,4 @@ npm run build
 **Sorun devam ederse:** Vercel Dashboard → Deployments → En son deployment'ın loglarını kontrol edin.
 
 
+

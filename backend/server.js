@@ -201,30 +201,39 @@ mongoose.connect(process.env.MONGO_URI)
 // ============================================
 // NODEMAILER CONFIGURATION
 // ============================================
-// Using Gmail service shorthand - handles host/port/secure automatically
-// This is more reliable than manual SMTP configuration on cloud platforms
+// Using Gmail with connection pooling for Render free tier
+// Pool keeps connection open, reducing timeout issues
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Gmail service shorthand - auto-configures host, port, secure
+  service: 'gmail',
+  pool: true,           // Keep connection open (crucial for slow networks)
+  maxConnections: 1,    // Limit to 1 to avoid Gmail blocking
+  rateDelta: 1000,      // Time between messages (1 second)
+  rateLimit: 3,         // Max 3 emails per rateDelta
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD // Use App Password, not regular password
   },
   tls: {
     rejectUnauthorized: false // Required for some cloud providers
-  }
+  },
+  // Aggressive timeouts for Render free tier network latency
+  connectionTimeout: 60000, // 60 seconds for initial connection
+  greetingTimeout: 30000,   // 30 seconds for SMTP greeting
+  socketTimeout: 60000,     // 60 seconds for socket operations
 });
 
 // Verify email configuration on startup (non-blocking)
 transporter.verify()
   .then(() => {
     console.log('✅ Email server is ready to send messages');
-    console.log('   Service: Gmail');
+    console.log('   Service: Gmail (pooled)');
+    console.log('   Pool: enabled, maxConnections: 1');
     console.log('   User:', process.env.EMAIL_USER ? process.env.EMAIL_USER.substring(0, 3) + '***' : 'NOT SET');
   })
   .catch((error) => {
     console.error('❌ Email configuration error:', error.message);
-    console.error('   Service: Gmail');
+    console.error('   Service: Gmail (pooled)');
     console.error('   User:', process.env.EMAIL_USER ? '***configured***' : 'NOT SET');
     console.error('   Pass:', process.env.EMAIL_PASSWORD ? '***configured***' : 'NOT SET');
     console.error('   Tip: Make sure you are using a Gmail App Password, not your regular password');

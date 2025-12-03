@@ -1,55 +1,56 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Instagram, Linkedin, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
-import emailjs from '@emailjs/browser';
-
-// ============================================
-// EMAILJS CONFIGURATION
-// ============================================
-// Get these from: https://dashboard.emailjs.com/
-// 1. Create account → Add Email Service (Gmail)
-// 2. Create Email Template
-// 3. Get Public Key from Account → API Keys
-
-const EMAILJS_SERVICE_ID = 'service_seyda'; // Your EmailJS service ID
-const EMAILJS_TEMPLATE_ID = 'template_contact'; // Your EmailJS template ID
-const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // Your EmailJS public key
 
 const Contact: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('sending');
     setErrorMessage('');
     
-    if (!formRef.current) return;
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    
+    const contactData = {
+      name: formData.get('name') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
+      message: formData.get('message') as string,
+    };
 
     try {
-      // Send email directly from browser using EmailJS
-      await emailjs.sendForm(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        formRef.current,
-        EMAILJS_PUBLIC_KEY
-      );
+      // Send to Vercel Serverless Function
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactData),
+      });
 
-      // Success!
-      setFormStatus('success');
-      formRef.current.reset();
-      console.log('✅ EmailJS: Mesaj başarıyla gönderildi');
-      
-      // Reset to idle after 5 seconds
-      setTimeout(() => {
-        setFormStatus('idle');
-      }, 5000);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Success!
+        setFormStatus('success');
+        form.reset();
+        console.log('✅ Mesaj başarıyla gönderildi');
+        
+        // Reset to idle after 5 seconds
+        setTimeout(() => {
+          setFormStatus('idle');
+        }, 5000);
+      } else {
+        throw new Error(result.message || 'Gönderim başarısız');
+      }
       
     } catch (error: any) {
       // Error occurred
       setFormStatus('error');
-      setErrorMessage('Mesajınız gönderilemedi. Lütfen WhatsApp ile iletişime geçin.');
-      console.error('❌ EmailJS error:', error);
+      setErrorMessage(error.message || 'Mesajınız gönderilemedi. Lütfen WhatsApp ile iletişime geçin.');
+      console.error('❌ Contact form error:', error);
     }
   };
 
@@ -155,7 +156,7 @@ const Contact: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form ref={formRef} id="contact-form" className="space-y-6" onSubmit={handleSubmit}>
+              <form id="contact-form" className="space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-slate-700">Adınız Soyadınız</label>
                   <input

@@ -85,3 +85,4 @@ Build çıktısı `dist/` klasörüne oluşturulur.
 - Authentication token'lar localStorage'da saklanır
 - Tüm API çağrıları `services/` klasöründe organize edilmiştir
 
+

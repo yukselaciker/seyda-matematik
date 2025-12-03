@@ -21,19 +21,19 @@ const Contact: React.FC = () => {
     };
 
     try {
-      // Send to Vercel Serverless Function
-      const response = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(contactData),
-      });
-
+      // Use dynamic API URL from config
+      const { apiPost } = await import('../config/api');
+      const response = await apiPost('/api/contact', contactData);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Gönderim başarısız');
+      }
+      
       const result = await response.json();
 
-      if (response.ok && result.success) {
-        // Success!
+      // Success!
+      if (result.success) {
         setFormStatus('success');
         form.reset();
         console.log('✅ Mesaj başarıyla gönderildi');

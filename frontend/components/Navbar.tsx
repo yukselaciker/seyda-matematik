@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { Menu, X, Calendar, LogIn, User, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Calendar } from 'lucide-react';
 import { NAV_ITEMS } from '../constants';
 import Logo from './Logo';
 
 interface NavbarProps {
   onBookingClick: () => void;
-  onNavigate: (view: string) => void;
-  currentView: string;
-  isLoggedIn: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onBookingClick, onNavigate, currentView, isLoggedIn }) => {
+const Navbar: React.FC<NavbarProps> = ({ onBookingClick }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -21,8 +18,6 @@ const Navbar: React.FC<NavbarProps> = ({ onBookingClick, onNavigate, currentView
         const elementId = href.substring(1);
         const element = document.getElementById(elementId);
         if (element) element.scrollIntoView({ behavior: 'smooth' });
-    } else {
-        onNavigate('landing');
     }
   };
 
@@ -30,14 +25,14 @@ const Navbar: React.FC<NavbarProps> = ({ onBookingClick, onNavigate, currentView
     <nav className="fixed w-full z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-24 items-center">
-          <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group" onClick={() => onNavigate('landing')}>
+          <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
             <div className="h-20 w-auto transition-transform duration-300 group-hover:scale-105">
                  <Logo className="h-full w-auto" />
             </div>
           </div>
 
           <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
-            {currentView === 'landing' && NAV_ITEMS.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
@@ -48,31 +43,6 @@ const Navbar: React.FC<NavbarProps> = ({ onBookingClick, onNavigate, currentView
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
               </a>
             ))}
-
-            {isLoggedIn ? (
-                <button
-                    onClick={() => onNavigate('dashboard')}
-                    className="text-slate-600 hover:text-indigo-900 font-medium flex items-center gap-2"
-                >
-                    <LayoutDashboard className="w-4 h-4" />
-                    Panele Git
-                </button>
-            ) : (
-                <div className="flex items-center gap-4 border-l pl-4 border-slate-200">
-                    <button 
-                        onClick={() => onNavigate('login')}
-                        className="text-slate-600 hover:text-indigo-900 text-sm font-medium flex items-center gap-1"
-                    >
-                        <LogIn className="w-4 h-4" /> Giriş
-                    </button>
-                    <button 
-                        onClick={() => onNavigate('register')}
-                        className="text-slate-600 hover:text-indigo-900 text-sm font-medium flex items-center gap-1"
-                    >
-                        <User className="w-4 h-4" /> Kayıt Ol
-                    </button>
-                </div>
-            )}
 
             <button
               onClick={onBookingClick}
@@ -99,7 +69,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookingClick, onNavigate, currentView
       {isOpen && (
         <div className="md:hidden bg-white border-b border-slate-100 animate-fadeIn">
           <div className="px-4 pt-2 pb-4 space-y-2">
-            {currentView === 'landing' && NAV_ITEMS.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
@@ -109,35 +79,6 @@ const Navbar: React.FC<NavbarProps> = ({ onBookingClick, onNavigate, currentView
                 {item.label}
               </a>
             ))}
-            
-            <div className="border-t border-slate-100 pt-2 mt-2">
-              {isLoggedIn ? (
-                <button
-                  onClick={() => { onNavigate('dashboard'); setIsOpen(false); }}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
-                >
-                  <LayoutDashboard className="w-5 h-5" />
-                  Panele Git
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => { onNavigate('login'); setIsOpen(false); }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
-                  >
-                    <LogIn className="w-5 h-5" />
-                    Giriş Yap
-                  </button>
-                  <button
-                    onClick={() => { onNavigate('register'); setIsOpen(false); }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
-                  >
-                    <User className="w-5 h-5" />
-                    Kayıt Ol
-                  </button>
-                </>
-              )}
-            </div>
 
             <button
               onClick={() => { onBookingClick(); setIsOpen(false); }}

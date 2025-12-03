@@ -197,3 +197,4 @@ Backend'i ayrı bir Vercel projesi olarak deploy edebilirsiniz:
 
 **Sorularınız için:** Vercel dokümantasyonuna bakın: https://vercel.com/docs
 
+

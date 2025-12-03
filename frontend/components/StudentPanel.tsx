@@ -43,8 +43,7 @@ import {
 } from './student';
 import { VideoManagementTab } from './student/VideoManagementTab';
 
-// Admin Components - API-connected
-import { AdminOverviewTab, AdminUsersTab } from './admin';
+// Note: Admin components now use local AdminOverview (defined below) instead of API-connected versions
 
 // --- INTERFACES ---
 interface StudentPanelProps {
@@ -203,12 +202,12 @@ const StudentPanel: React.FC<StudentPanelProps> = memo(({ user, activeTab, onLog
     if (isAdmin) {
       switch (activeTab) {
         case 'overview':
-          // Use new API-connected AdminOverviewTab
-          return <AdminOverviewTab user={user} />;
+          // Use local AdminOverview component
+          return <AdminOverview user={user} homeworks={homeworks || []} />;
 
         case 'students':
-          // Use new API-connected AdminUsersTab
-          return <AdminUsersTab />;
+          // Use local StudentManagement component
+          return <StudentManagement />;
 
         case 'upload':
         case 'video-management':
@@ -241,7 +240,7 @@ const StudentPanel: React.FC<StudentPanelProps> = memo(({ user, activeTab, onLog
         default:
           // CRITICAL FIX: Always return overview for admin if tab doesn't match
           console.warn(`Admin tab "${activeTab}" not found, defaulting to overview`);
-          return <AdminOverviewTab user={user} />;
+          return <AdminOverview user={user} homeworks={homeworks || []} />;
       }
     }
 

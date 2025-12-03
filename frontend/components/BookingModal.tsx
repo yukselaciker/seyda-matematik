@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { X, Calendar, User, BookOpen, CheckCircle, Loader2, AlertCircle, Mail, Phone, Sun, Sunset, Moon } from 'lucide-react';
+import { API_URL, API_ENDPOINTS } from '../config/api';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-// Backend API URL - aynı Contact.tsx ile uyumlu
-const API_URL = (import.meta as any).env?.VITE_API_URL || (process as any).env?.REACT_APP_API_URL || 'http://localhost:5001';
 
 const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<'form' | 'success' | 'error'>('form');
@@ -70,7 +68,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
     } as any;
 
     try {
-      const response = await fetch(`${API_URL}/api/contact`, {
+      const response = await fetch(`${API_URL}${API_ENDPOINTS.CONTACT}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

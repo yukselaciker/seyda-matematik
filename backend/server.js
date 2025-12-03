@@ -44,10 +44,33 @@ const contactLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Enable CORS for frontend (both ports)
+// ============================================
+// CORS CONFIGURATION
+// ============================================
+// Allowed origins for CORS (local development + production)
+const allowedOrigins = [
+  'http://localhost:5173',           // Vite dev server (default)
+  'http://localhost:3000',           // Alternative local port
+  'http://localhost:3001',           // Alternative local port
+  'https://seyda-matematik.vercel.app', // Production frontend on Vercel
+  process.env.FRONTEND_URL           // Custom frontend URL from env
+].filter(Boolean); // Remove undefined/null values
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS blocked request from: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
 }));
 
 // Parse JSON bodies
@@ -157,15 +180,21 @@ mongoose.connect(process.env.MONGO_URI)
 // ============================================
 // NODEMAILER CONFIGURATION
 // ============================================
+// Using port 465 with SSL for better compatibility with cloud providers (Render, etc.)
+// Port 587 with STARTTLS can cause ETIMEDOUT errors on some cloud platforms
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_PORT) || 465,
+  secure: true, // Use SSL (port 465) - more reliable on cloud platforms like Render
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
-  }
+  },
+  // Connection timeout settings for cloud environments
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 // Verify email configuration on startup
@@ -667,13 +696,23 @@ app.patch('/api/contacts/:id/status', adminAuth, async (req, res) => {
 });
 
 /**
- * Health check endpoint
+ * Root health check endpoint - Simple ping for Render/uptime monitoring
+ * GET / returns "API is running..." for easy server status check
+ */
+app.get('/', (req, res) => {
+  res.status(200).send('API is running...');
+});
+
+/**
+ * Detailed health check endpoint
+ * GET /api/health returns JSON with server status details
  */
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Server is running',
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Instagram, Linkedin, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
-
-// Backend API URL - Update this when deploying
-const API_URL = (import.meta as any).env?.VITE_API_URL || process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { API_URL, API_ENDPOINTS } from '../config/api';
 
 const Contact: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -26,7 +24,7 @@ const Contact: React.FC = () => {
 
     try {
       // Send to backend API
-      const response = await fetch(`${API_URL}/api/contact`, {
+      const response = await fetch(`${API_URL}${API_ENDPOINTS.CONTACT}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -145,6 +145,9 @@ const AppContent: React.FC = () => {
     setCurrentView('dashboard');
     setDashboardTab('overview');
     
+    // Push to browser history
+    window.history.pushState({ view: 'dashboard' }, '', '/dashboard');
+    
     // Welcome toast
     const firstName = userData.full_name?.split(' ')[0] || 'Öğrenci';
     showToast(`Hoş geldin, ${firstName}! 👋`, 'success');
@@ -160,14 +163,47 @@ const AppContent: React.FC = () => {
       setCurrentView('landing');
       setDashboardTab('overview');
       setIsLoggingOut(false);
+      
+      // Push to browser history
+      window.history.pushState({ view: 'landing' }, '', '/');
+      
       showToast('Güvenli bir şekilde çıkış yaptınız.', 'info');
     }, 1000);
   }, [showToast]);
 
-  // --- NAVIGATION ---
+  // --- NAVIGATION WITH BROWSER HISTORY SUPPORT ---
   const handleNavigate = useCallback((view: string) => {
-    setCurrentView(view as AppView);
+    const newView = view as AppView;
+    setCurrentView(newView);
+    
+    // Push to browser history for back button support
+    const url = newView === 'landing' ? '/' : `/${newView}`;
+    window.history.pushState({ view: newView }, '', url);
   }, []);
+
+  // --- BROWSER BACK BUTTON SUPPORT ---
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Handle browser back/forward buttons
+      if (event.state?.view) {
+        setCurrentView(event.state.view as AppView);
+      } else {
+        // Default to landing if no state
+        setCurrentView('landing');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Set initial history state
+    const initialView = currentView;
+    const initialUrl = initialView === 'landing' ? '/' : `/${initialView}`;
+    window.history.replaceState({ view: initialView }, '', initialUrl);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []); // Only run once on mount
 
   // --- BOOKING MODAL ---
   const openBooking = useCallback(() => setIsBookingOpen(true), []);

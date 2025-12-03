@@ -202,7 +202,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT) || 465,
+  port: 465, // SMTPS port (integer, not string)
   secure: true, // SMTPS - Use implicit SSL on port 465
   auth: {
     user: process.env.EMAIL_USER,
@@ -213,20 +213,27 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false, // Accept self-signed certificates (needed for some cloud providers)
     minVersion: 'TLSv1.2'      // Enforce minimum TLS version for security
   },
-  // Extended timeout settings for cloud environments (Render cold starts, etc.)
-  connectionTimeout: 30000, // 30 seconds (increased for cold starts)
-  greetingTimeout: 30000,   // 30 seconds
-  socketTimeout: 60000,     // 60 seconds for slow email servers
+  // Timeout settings - shorter to fail fast and allow retry
+  connectionTimeout: 10000, // 10 seconds to establish connection
+  greetingTimeout: 5000,    // 5 seconds for SMTP greeting
+  socketTimeout: 10000,     // 10 seconds for socket operations
+  // Debug logging - enable to diagnose issues
+  logger: process.env.NODE_ENV !== 'production' || process.env.EMAIL_DEBUG === 'true',
+  debug: process.env.NODE_ENV !== 'production' || process.env.EMAIL_DEBUG === 'true',
 });
 
-// Verify email configuration on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email configuration error:', error);
-  } else {
+// Verify email configuration on startup (non-blocking)
+transporter.verify()
+  .then(() => {
     console.log('✅ Email server is ready to send messages');
-  }
-});
+  })
+  .catch((error) => {
+    console.error('❌ Email configuration error:', error.message);
+    console.error('   Host:', process.env.EMAIL_HOST || 'smtp.gmail.com');
+    console.error('   Port: 465');
+    console.error('   User:', process.env.EMAIL_USER ? '***configured***' : 'NOT SET');
+    console.error('   Pass:', process.env.EMAIL_PASSWORD ? '***configured***' : 'NOT SET');
+  });
 
 // ============================================
 // VALIDATION RULES

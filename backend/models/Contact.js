@@ -48,7 +48,7 @@ const contactSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['new', 'read', 'replied'],
+    enum: ['new', 'read', 'replied', 'email_failed', 'pending', 'archived'],
     default: 'new'
   },
   ipAddress: {

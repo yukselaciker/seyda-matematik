@@ -2,37 +2,40 @@
  * API Configuration
  * 
  * Centralized configuration for API endpoints.
- * Automatically detects environment and uses appropriate backend URL.
+ * 
+ * Architecture:
+ * - Production: Vercel Serverless Functions (same domain, relative paths)
+ * - Development: Local backend server OR Vercel dev
  * 
  * Features:
- * - Dynamic URL detection (Vercel/localhost)
- * - Timeout handling for Render free tier (server sleep)
- * - "Server waking up" status detection
+ * - Relative paths for Vercel deployment (no CORS issues)
+ * - Fallback to Render backend if needed
+ * - Timeout handling and retry logic
  */
 
-// Production backend URL (Render)
-const PRODUCTION_API_URL = 'https://seyda-matematik-api.onrender.com';
+// ============================================
+// API URL CONFIGURATION
+// ============================================
 
-// Development backend URL (Local)
-const DEVELOPMENT_API_URL = 'http://localhost:5001';
+// Fallback backend URL (Render) - used only if VITE_API_URL is set
+const RENDER_BACKEND_URL = 'https://seyda-matematik-api.onrender.com';
+
+// Development backend URL (Local Express server)
+const LOCAL_BACKEND_URL = 'http://localhost:5001';
 
 // ============================================
 // TIMEOUT & RETRY SETTINGS
 // ============================================
-// Render free tier can take 60-90 seconds to wake up from sleep
-// Extended timeout to 2 minutes to handle worst-case cold starts
+// Vercel functions have 10s default timeout (can be extended to 30s on Pro)
+// Much faster than Render free tier!
 
-export const API_TIMEOUT_MS = 120000; // 120 seconds (2 minutes) - handles Render cold starts
-export const SERVER_WAKE_THRESHOLD_MS = 5000; // Show "waking up" message after 5 seconds
-export const RETRY_DELAY_MS = 3000; // Wait 3 seconds before retry
-export const MAX_RETRIES = 1; // Retry once on 503 or network error
+export const API_TIMEOUT_MS = 30000; // 30 seconds (Vercel is fast, no cold starts like Render)
+export const SERVER_WAKE_THRESHOLD_MS = 3000; // Show "loading" message after 3 seconds
+export const RETRY_DELAY_MS = 2000; // Wait 2 seconds before retry
+export const MAX_RETRIES = 1; // Retry once on error
 
 /**
  * Determines if we're running in production environment
- * Checks multiple indicators:
- * 1. Vite's import.meta.env.PROD
- * 2. Hostname (vercel.app or custom domain)
- * 3. Explicit VITE_API_URL environment variable
  */
 const isProduction = (): boolean => {
   // Check Vite's built-in production flag
@@ -46,7 +49,7 @@ const isProduction = (): boolean => {
     if (
       hostname.includes('vercel.app') ||
       hostname.includes('seyda-matematik') ||
-      hostname !== 'localhost' && hostname !== '127.0.0.1'
+      (hostname !== 'localhost' && hostname !== '127.0.0.1')
     ) {
       return true;
     }
@@ -56,26 +59,46 @@ const isProduction = (): boolean => {
 };
 
 /**
+ * Check if we're using Vercel Serverless Functions
+ * When true, we use relative paths (same domain)
+ */
+const isVercelServerless = (): boolean => {
+  // Check for explicit flag to use external backend
+  const useExternalBackend = (import.meta as any).env?.VITE_USE_EXTERNAL_BACKEND;
+  if (useExternalBackend === 'true') {
+    return false;
+  }
+  
+  // Default: use Vercel serverless in production
+  return isProduction();
+};
+
+/**
  * Get the API base URL based on environment
- * Priority:
- * 1. VITE_API_URL environment variable (if set)
- * 2. Auto-detect based on environment
+ * 
+ * In production (Vercel): Returns empty string (relative paths)
+ * In development: Returns local backend URL
  */
 export const getApiUrl = (): string => {
-  // First check for explicit environment variable
+  // Check for explicit environment variable (for external backend like Render)
   const envApiUrl = (import.meta as any).env?.VITE_API_URL;
   if (envApiUrl) {
     return envApiUrl;
   }
   
-  // Auto-detect based on environment
-  return isProduction() ? PRODUCTION_API_URL : DEVELOPMENT_API_URL;
+  // If using Vercel serverless, use relative paths (empty base URL)
+  if (isVercelServerless()) {
+    return ''; // Relative path - /api/contact will work on same domain
+  }
+  
+  // Development: use local backend
+  return LOCAL_BACKEND_URL;
 };
 
 /**
- * API Base URL - use this in your fetch/axios calls
- * @example
- * fetch(`${API_URL}/api/contact`, { ... })
+ * API Base URL
+ * - Empty string in production (Vercel serverless - same domain)
+ * - http://localhost:5001 in development
  */
 export const API_URL = getApiUrl();
 

@@ -75,6 +75,10 @@ export const API_ENDPOINTS = {
   LOGIN: '/api/auth/login',
   REGISTER: '/api/auth/register',
   
+  // Admin endpoints
+  ADMIN_USERS: '/api/admin/users',
+  ADMIN_STATS: '/api/admin/stats',
+  
   // Health check
   HEALTH: '/api/health',
 } as const;
@@ -132,6 +136,69 @@ export const apiGet = async <T>(endpoint: string, token?: string): Promise<T> =>
     headers,
   });
   return response.json();
+};
+
+/**
+ * Helper function for API DELETE requests
+ */
+export const apiDelete = async <T>(endpoint: string, token?: string): Promise<T> => {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(buildApiUrl(endpoint), {
+    ...defaultFetchOptions,
+    method: 'DELETE',
+    headers,
+  });
+  return response.json();
+};
+
+/**
+ * Helper function for API PATCH requests
+ */
+export const apiPatch = async <T>(endpoint: string, data: object, token?: string): Promise<T> => {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(buildApiUrl(endpoint), {
+    ...defaultFetchOptions,
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(data),
+  });
+  return response.json();
+};
+
+/**
+ * Get auth token from localStorage
+ */
+export const getAuthToken = (): string | null => {
+  try {
+    // Try mockUser first (used by AuthPage)
+    const mockUserStr = localStorage.getItem('mockUser');
+    if (mockUserStr) {
+      const user = JSON.parse(mockUserStr);
+      if (user.token) return user.token;
+    }
+    
+    // Try auth_token directly
+    const directToken = localStorage.getItem('auth_token');
+    if (directToken) return directToken;
+    
+  } catch (error) {
+    console.error('Failed to get auth token:', error);
+  }
+  return null;
 };
 
 export default API_URL;

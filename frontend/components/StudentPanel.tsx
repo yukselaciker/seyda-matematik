@@ -43,6 +43,9 @@ import {
 } from './student';
 import { VideoManagementTab } from './student/VideoManagementTab';
 
+// Admin Components - API-connected
+import { AdminOverviewTab, AdminUsersTab } from './admin';
+
 // --- INTERFACES ---
 interface StudentPanelProps {
   user: User;
@@ -200,15 +203,12 @@ const StudentPanel: React.FC<StudentPanelProps> = memo(({ user, activeTab, onLog
     if (isAdmin) {
       switch (activeTab) {
         case 'overview':
-          return (
-            <AdminOverview 
-              user={user}
-              homeworks={homeworks || []}
-            />
-          );
+          // Use new API-connected AdminOverviewTab
+          return <AdminOverviewTab user={user} />;
 
         case 'students':
-          return <StudentManagement />;
+          // Use new API-connected AdminUsersTab
+          return <AdminUsersTab />;
 
         case 'upload':
         case 'video-management':
@@ -241,12 +241,7 @@ const StudentPanel: React.FC<StudentPanelProps> = memo(({ user, activeTab, onLog
         default:
           // CRITICAL FIX: Always return overview for admin if tab doesn't match
           console.warn(`Admin tab "${activeTab}" not found, defaulting to overview`);
-          return (
-            <AdminOverview 
-              user={user}
-              homeworks={homeworks || []}
-            />
-          );
+          return <AdminOverviewTab user={user} />;
       }
     }
 

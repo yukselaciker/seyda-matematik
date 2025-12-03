@@ -695,6 +695,187 @@ app.patch('/api/contacts/:id/status', adminAuth, async (req, res) => {
   }
 });
 
+// ============================================
+// ADMIN ROUTES
+// ============================================
+
+/**
+ * GET /api/admin/users (ADMIN ONLY)
+ * List all registered users
+ */
+app.get('/api/admin/users', adminAuth, async (req, res) => {
+  try {
+    const { role, limit = 100, page = 1 } = req.query;
+    
+    const query = role ? { role } : {};
+    const skip = (page - 1) * limit;
+
+    const users = await User.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(skip)
+      .select('-password -__v');
+
+    const total = await User.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      data: users,
+      pagination: {
+        total,
+        page: parseInt(page),
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('❌ Get users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Kullanıcılar alınırken hata oluştu.'
+    });
+  }
+});
+
+/**
+ * DELETE /api/admin/users/:id (ADMIN ONLY)
+ * Delete a user
+ */
+app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Kullanıcı bulunamadı.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Kullanıcı başarıyla silindi.',
+      data: { id }
+    });
+  } catch (error) {
+    console.error('❌ Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Kullanıcı silinirken hata oluştu.'
+    });
+  }
+});
+
+/**
+ * PATCH /api/admin/users/:id/role (ADMIN ONLY)
+ * Update user role
+ */
+app.patch('/api/admin/users/:id/role', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!['student', 'teacher', 'parent', 'admin'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Geçersiz rol değeri.'
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Kullanıcı bulunamadı.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Kullanıcı rolü güncellendi.',
+      data: user
+    });
+  } catch (error) {
+    console.error('❌ Update user role error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Rol güncellenirken hata oluştu.'
+    });
+  }
+});
+
+/**
+ * DELETE /api/contacts/:id (ADMIN ONLY)
+ * Delete a contact message
+ */
+app.delete('/api/contacts/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const contact = await Contact.findByIdAndDelete(id);
+
+    if (!contact) {
+      return res.status(404).json({
+        success: false,
+        message: 'Mesaj bulunamadı.'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Mesaj başarıyla silindi.',
+      data: { id }
+    });
+  } catch (error) {
+    console.error('❌ Delete contact error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Mesaj silinirken hata oluştu.'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/stats (ADMIN ONLY)
+ * Get dashboard statistics
+ */
+app.get('/api/admin/stats', adminAuth, async (req, res) => {
+  try {
+    const [totalUsers, totalContacts, newContacts] = await Promise.all([
+      User.countDocuments(),
+      Contact.countDocuments(),
+      Contact.countDocuments({ status: 'new' })
+    ]);
+
+    // Count by role
+    const studentCount = await User.countDocuments({ role: 'student' });
+    const teacherCount = await User.countDocuments({ role: 'teacher' });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUsers,
+        totalContacts,
+        newContacts,
+        studentCount,
+        teacherCount
+      }
+    });
+  } catch (error) {
+    console.error('❌ Get stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'İstatistikler alınırken hata oluştu.'
+    });
+  }
+});
+
 /**
  * Root health check endpoint - Simple ping for Render/uptime monitoring
  * GET / returns "API is running..." for easy server status check

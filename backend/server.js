@@ -56,17 +56,34 @@ const allowedOrigins = [
   process.env.FRONTEND_URL           // Custom frontend URL from env
 ].filter(Boolean); // Remove undefined/null values
 
+// Regex pattern to match Vercel preview deployments
+// Matches: https://seyda-matematik-*-furkanyuksels-projects.vercel.app
+const vercelPreviewPattern = /^https:\/\/seyda-matematik(-[a-z0-9]+)?(-[a-z0-9-]+)?\.vercel\.app$/;
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     
+    // Check exact match in allowedOrigins
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️ CORS blocked request from: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+    
+    // Check if it's a Vercel preview deployment
+    if (vercelPreviewPattern.test(origin)) {
+      console.log(`✅ CORS allowed Vercel preview: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // Also allow any *.vercel.app subdomain for flexibility
+    if (origin.endsWith('.vercel.app')) {
+      console.log(`✅ CORS allowed Vercel domain: ${origin}`);
+      return callback(null, true);
+    }
+    
+    console.warn(`⚠️ CORS blocked request from: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -180,21 +197,26 @@ mongoose.connect(process.env.MONGO_URI)
 // ============================================
 // NODEMAILER CONFIGURATION
 // ============================================
-// Using port 465 with SSL for better compatibility with cloud providers (Render, etc.)
-// Port 587 with STARTTLS can cause ETIMEDOUT errors on some cloud platforms
+// Using port 465 with SMTPS (Implicit SSL) for better compatibility with cloud providers
+// Port 587 with STARTTLS can cause ETIMEDOUT errors on Render and similar platforms
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.EMAIL_PORT) || 465,
-  secure: true, // Use SSL (port 465) - more reliable on cloud platforms like Render
+  secure: true, // SMTPS - Use implicit SSL on port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
   },
-  // Connection timeout settings for cloud environments
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
+  // TLS configuration to prevent SSL certificate issues on cloud servers
+  tls: {
+    rejectUnauthorized: false, // Accept self-signed certificates (needed for some cloud providers)
+    minVersion: 'TLSv1.2'      // Enforce minimum TLS version for security
+  },
+  // Extended timeout settings for cloud environments (Render cold starts, etc.)
+  connectionTimeout: 30000, // 30 seconds (increased for cold starts)
+  greetingTimeout: 30000,   // 30 seconds
+  socketTimeout: 60000,     // 60 seconds for slow email servers
 });
 
 // Verify email configuration on startup

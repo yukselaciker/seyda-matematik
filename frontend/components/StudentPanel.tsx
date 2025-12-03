@@ -221,7 +221,7 @@ const StudentPanel: React.FC<StudentPanelProps> = memo(({ user, activeTab, onLog
           return <AppointmentRequestsTab />;
 
         case 'messages':
-          return <AdminMessages />;
+          return <AdminMessages onSessionExpired={onLogout} />;
 
         case 'practice-exams':
         case 'exam-management':

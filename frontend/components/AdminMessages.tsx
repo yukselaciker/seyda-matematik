@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Mail, Phone, Calendar, CheckCircle, Clock, AlertCircle, Search, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Mail, Phone, Calendar, CheckCircle, Clock, AlertCircle, Search, RefreshCw, LogOut } from 'lucide-react';
+import { API_URL, API_ENDPOINTS } from '../config/api';
 
 interface ContactMessage {
   _id: string;
@@ -11,35 +12,58 @@ interface ContactMessage {
   status: 'new' | 'read' | 'replied' | 'email_failed';
 }
 
-const API_URL = (import.meta as any).env?.VITE_API_URL || (process as any).env?.REACT_APP_API_URL || 'http://localhost:5000';
+interface AdminMessagesProps {
+  onSessionExpired?: () => void; // Callback when session expires (401/403)
+}
 
 // Get auth token from localStorage
 const getAuthToken = (): string | null => {
   try {
-    const userStr = localStorage.getItem('mockUser');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      return user.token || null;
+    // Try mockUser first (used by AuthPage)
+    const mockUserStr = localStorage.getItem('mockUser');
+    if (mockUserStr) {
+      const user = JSON.parse(mockUserStr);
+      if (user.token) return user.token;
     }
+    
+    // Try auth_token directly
+    const directToken = localStorage.getItem('auth_token');
+    if (directToken) return directToken;
+    
   } catch (error) {
     console.error('Failed to get auth token:', error);
   }
   return null;
 };
 
-// Get API key as fallback
+// Get API key as fallback (for admin access)
 const ADMIN_API_KEY = (import.meta as any).env?.VITE_ADMIN_API_KEY || '6d01500d8b81f0160b863f1745e7a3bbb69a3525674241c8e2a30fd6cb4c2e53';
 
-const AdminMessages: React.FC = () => {
+const AdminMessages: React.FC<AdminMessagesProps> = ({ onSessionExpired }) => {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'network' | 'auth' | 'server' | null>(null);
   const [filter, setFilter] = useState<'all' | 'new' | 'replied'>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const fetchMessages = async () => {
+  // Handle session expiration
+  const handleSessionExpired = useCallback(() => {
+    // Clear stored credentials
+    localStorage.removeItem('mockUser');
+    localStorage.removeItem('auth_token');
+    
+    // Notify parent component
+    if (onSessionExpired) {
+      onSessionExpired();
+    }
+  }, [onSessionExpired]);
+
+  const fetchMessages = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setErrorType(null);
+    
     try {
       const token = getAuthToken();
       const headers: HeadersInit = {
@@ -50,24 +74,57 @@ const AdminMessages: React.FC = () => {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       } else {
-        headers['x-api-key'] = ADMIN_API_KEY;
+        // Fallback to API key for admin access
+        headers['X-API-Key'] = ADMIN_API_KEY;
       }
       
-      const response = await fetch(`${API_URL}/api/contacts?limit=100`, {
+      console.log('📡 Fetching messages from:', `${API_URL}${API_ENDPOINTS.CONTACTS}`);
+      
+      const response = await fetch(`${API_URL}${API_ENDPOINTS.CONTACTS}?limit=100`, {
+        method: 'GET',
         headers,
+        credentials: 'include', // Include cookies for session handling
       });
-      if (!response.ok) {
-        throw new Error('Mesajlar alınamadı');
+      
+      // Handle authentication errors
+      if (response.status === 401 || response.status === 403) {
+        console.error('❌ Authentication failed:', response.status);
+        setErrorType('auth');
+        setError('Oturum süreniz dolmuş veya yetkiniz yok. Lütfen tekrar giriş yapın.');
+        return;
       }
+      
+      // Handle server errors
+      if (!response.ok) {
+        console.error('❌ Server error:', response.status);
+        setErrorType('server');
+        throw new Error(`Sunucu hatası: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setMessages(data.data || []);
-    } catch (err) {
-      console.error('Error fetching messages:', err);
-      setError('Mesajlar yüklenirken bir hata oluştu.');
+      
+      if (data.success) {
+        setMessages(data.data || []);
+        console.log('✅ Loaded', data.data?.length || 0, 'messages');
+      } else {
+        throw new Error(data.message || 'Mesajlar alınamadı');
+      }
+      
+    } catch (err: any) {
+      console.error('❌ Error fetching messages:', err);
+      
+      // Check if it's a network error
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setErrorType('network');
+        setError('Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.');
+      } else if (!errorType) {
+        setErrorType('server');
+        setError(err.message || 'Mesajlar yüklenirken bir hata oluştu.');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [errorType]);
 
   useEffect(() => {
     fetchMessages();
@@ -85,22 +142,33 @@ const AdminMessages: React.FC = () => {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       } else {
-        headers['x-api-key'] = ADMIN_API_KEY;
+        headers['X-API-Key'] = ADMIN_API_KEY;
       }
       
-      const response = await fetch(`${API_URL}/api/contacts/${id}/status`, {
+      const response = await fetch(`${API_URL}${API_ENDPOINTS.CONTACTS}/${id}/status`, {
         method: 'PATCH',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
       });
+
+      // Handle auth errors
+      if (response.status === 401 || response.status === 403) {
+        setErrorType('auth');
+        setError('Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.');
+        return;
+      }
 
       if (response.ok) {
         setMessages(prev => 
           prev.map(msg => msg._id === id ? { ...msg, status: newStatus } : msg)
         );
+        console.log('✅ Status updated:', id, '->', newStatus);
+      } else {
+        console.error('❌ Failed to update status:', response.status);
       }
     } catch (err) {
-      console.error('Error updating status:', err);
+      console.error('❌ Error updating status:', err);
     } finally {
       setUpdatingId(null);
     }
@@ -166,10 +234,34 @@ const AdminMessages: React.FC = () => {
 
       {/* Content */}
       {error ? (
-        <div className="p-8 text-center text-red-600 bg-red-50 m-6 rounded-lg">
-          <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>{error}</p>
-          <button onClick={fetchMessages} className="mt-4 text-sm underline">Tekrar Dene</button>
+        <div className={`p-8 text-center m-6 rounded-lg ${
+          errorType === 'auth' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-600'
+        }`}>
+          {errorType === 'auth' ? (
+            <LogOut className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          ) : (
+            <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          )}
+          <p className="font-medium mb-2">
+            {errorType === 'auth' ? 'Oturum Süresi Doldu' : 'Bağlantı Hatası'}
+          </p>
+          <p className="text-sm mb-4">{error}</p>
+          
+          {errorType === 'auth' ? (
+            <button 
+              onClick={handleSessionExpired}
+              className="mt-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+            >
+              Tekrar Giriş Yap
+            </button>
+          ) : (
+            <button 
+              onClick={fetchMessages} 
+              className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+            >
+              Tekrar Dene
+            </button>
+          )}
         </div>
       ) : filteredMessages.length === 0 ? (
         <div className="p-12 text-center text-slate-500">

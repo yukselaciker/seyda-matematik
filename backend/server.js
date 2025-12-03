@@ -630,7 +630,25 @@ app.post('/api/contact', contactLimiter, contactValidationRules, async (req, res
     });
 
   } catch (error) {
-    console.error('❌ Contact form error:', error);
+    // Detailed error logging for debugging
+    console.error('❌ Contact form error:', error.message);
+    console.error('   Error name:', error.name);
+    console.error('   Stack:', error.stack?.split('\n').slice(0, 3).join('\n'));
+    
+    // Log Mongoose validation errors in detail
+    if (error.name === 'ValidationError') {
+      console.error('   Validation errors:');
+      Object.keys(error.errors || {}).forEach(field => {
+        console.error(`     - ${field}: ${error.errors[field].message}`);
+      });
+    }
+    
+    // Log full error object for debugging
+    try {
+      console.error('   Full error JSON:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    } catch (e) {
+      console.error('   Could not stringify error');
+    }
     
     res.status(500).json({
       success: false,

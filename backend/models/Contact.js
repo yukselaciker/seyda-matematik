@@ -28,11 +28,8 @@ const contactSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: [true, 'Phone number is required'],
-    trim: true,
-    match: [
-      /^[\d\s\+\-\(\)]+$/,
-      'Please provide a valid phone number'
-    ]
+    trim: true
+    // Note: Regex validation removed - accept any format, validate on frontend
   },
   message: {
     type: String,
@@ -48,8 +45,8 @@ const contactSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['new', 'read', 'replied', 'email_failed', 'pending', 'archived'],
     default: 'new'
+    // Note: enum removed - accept any status string to prevent validation crashes
   },
   ipAddress: {
     type: String,

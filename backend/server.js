@@ -26,8 +26,12 @@ const User = require('./models/User');
 const app = express();
 
 // ============================================
-// MIDDLEWARE CONFIGURATION
+// PROXY & MIDDLEWARE CONFIGURATION
 // ============================================
+
+// Trust proxy - REQUIRED for Render/Vercel/Heroku
+// Fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR from express-rate-limit
+app.set('trust proxy', 1);
 
 // Security headers
 app.use(helmet());
@@ -197,42 +201,33 @@ mongoose.connect(process.env.MONGO_URI)
 // ============================================
 // NODEMAILER CONFIGURATION
 // ============================================
-// Using port 465 with SMTPS (Implicit SSL) for better compatibility with cloud providers
-// Port 587 with STARTTLS can cause ETIMEDOUT errors on Render and similar platforms
+// Using Gmail service shorthand - handles host/port/secure automatically
+// This is more reliable than manual SMTP configuration on cloud platforms
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: 465, // SMTPS port (integer, not string)
-  secure: true, // SMTPS - Use implicit SSL on port 465
+  service: 'gmail', // Gmail service shorthand - auto-configures host, port, secure
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+    pass: process.env.EMAIL_PASSWORD // Use App Password, not regular password
   },
-  // TLS configuration to prevent SSL certificate issues on cloud servers
   tls: {
-    rejectUnauthorized: false, // Accept self-signed certificates (needed for some cloud providers)
-    minVersion: 'TLSv1.2'      // Enforce minimum TLS version for security
-  },
-  // Timeout settings - shorter to fail fast and allow retry
-  connectionTimeout: 10000, // 10 seconds to establish connection
-  greetingTimeout: 5000,    // 5 seconds for SMTP greeting
-  socketTimeout: 10000,     // 10 seconds for socket operations
-  // Debug logging - enable to diagnose issues
-  logger: process.env.NODE_ENV !== 'production' || process.env.EMAIL_DEBUG === 'true',
-  debug: process.env.NODE_ENV !== 'production' || process.env.EMAIL_DEBUG === 'true',
+    rejectUnauthorized: false // Required for some cloud providers
+  }
 });
 
 // Verify email configuration on startup (non-blocking)
 transporter.verify()
   .then(() => {
     console.log('✅ Email server is ready to send messages');
+    console.log('   Service: Gmail');
+    console.log('   User:', process.env.EMAIL_USER ? process.env.EMAIL_USER.substring(0, 3) + '***' : 'NOT SET');
   })
   .catch((error) => {
     console.error('❌ Email configuration error:', error.message);
-    console.error('   Host:', process.env.EMAIL_HOST || 'smtp.gmail.com');
-    console.error('   Port: 465');
+    console.error('   Service: Gmail');
     console.error('   User:', process.env.EMAIL_USER ? '***configured***' : 'NOT SET');
     console.error('   Pass:', process.env.EMAIL_PASSWORD ? '***configured***' : 'NOT SET');
+    console.error('   Tip: Make sure you are using a Gmail App Password, not your regular password');
   });
 
 // ============================================

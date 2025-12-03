@@ -266,9 +266,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                             <span className="flex items-center gap-2">
                               <Loader2 className="h-5 w-5 animate-spin" />
                               {isServerWaking ? (
-                                <span className="text-xs">
-                                  <Clock className="inline w-3 h-3 mr-1" />
-                                  Sunucu uyanıyor...
+                                <span className="text-xs flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  Sunucu başlatılıyor (1 dk)...
                                 </span>
                               ) : 'Gönderiliyor...'}
                             </span>

@@ -16,9 +16,16 @@ const PRODUCTION_API_URL = 'https://seyda-matematik-api.onrender.com';
 // Development backend URL (Local)
 const DEVELOPMENT_API_URL = 'http://localhost:5001';
 
-// Timeout settings (Render free tier can take up to 60s to wake up)
-export const API_TIMEOUT_MS = 60000; // 60 seconds
+// ============================================
+// TIMEOUT & RETRY SETTINGS
+// ============================================
+// Render free tier can take 60-90 seconds to wake up from sleep
+// Extended timeout to 2 minutes to handle worst-case cold starts
+
+export const API_TIMEOUT_MS = 120000; // 120 seconds (2 minutes) - handles Render cold starts
 export const SERVER_WAKE_THRESHOLD_MS = 5000; // Show "waking up" message after 5 seconds
+export const RETRY_DELAY_MS = 3000; // Wait 3 seconds before retry
+export const MAX_RETRIES = 1; // Retry once on 503 or network error
 
 /**
  * Determines if we're running in production environment
@@ -211,7 +218,7 @@ export const getAuthToken = (): string | null => {
 };
 
 // ============================================
-// ROBUST FETCH WITH TIMEOUT & SERVER WAKE-UP
+// ROBUST FETCH WITH TIMEOUT, RETRY & SERVER WAKE-UP
 // ============================================
 
 /**
@@ -223,7 +230,31 @@ export interface ApiResult<T> {
   error?: string;
   isServerWaking?: boolean;
   isTimeout?: boolean;
+  retryCount?: number;
 }
+
+/**
+ * Sleep utility for retry delays
+ */
+const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Check if error is retryable (503, network error, timeout)
+ */
+const isRetryableError = (error: any, response?: Response): boolean => {
+  // Retry on 503 Service Unavailable (server waking up)
+  if (response?.status === 503) return true;
+  
+  // Retry on network errors
+  if (error?.name === 'TypeError') return true;
+  if (error?.message?.includes('fetch')) return true;
+  if (error?.message?.includes('network')) return true;
+  
+  // Retry on timeout (AbortError)
+  if (error?.name === 'AbortError') return true;
+  
+  return false;
+};
 
 /**
  * Fetch with timeout - aborts request after specified time
@@ -250,7 +281,12 @@ const fetchWithTimeout = async (
 };
 
 /**
- * Robust API fetch with timeout handling and server wake-up detection
+ * Robust API fetch with timeout, retry logic, and server wake-up detection
+ * 
+ * Features:
+ * - 120 second timeout (handles Render cold starts)
+ * - Auto-retry on 503 or network errors
+ * - "Server waking up" callback after 5 seconds
  * 
  * @param endpoint - API endpoint (e.g., '/api/contact')
  * @param options - Fetch options
@@ -270,13 +306,21 @@ export const apiFetch = async <T>(
 ): Promise<ApiResult<T>> => {
   const url = buildApiUrl(endpoint);
   const startTime = Date.now();
+  let retryCount = 0;
   
-  // Set up wake-up detection
-  let wakeUpTimeout: NodeJS.Timeout | null = null;
-  if (onServerWaking) {
-    wakeUpTimeout = setTimeout(() => {
+  // Set up wake-up detection - triggers after 5 seconds
+  let wakeUpTimeout: ReturnType<typeof setTimeout> | null = null;
+  let hasCalledWakeUp = false;
+  
+  const triggerWakeUp = () => {
+    if (onServerWaking && !hasCalledWakeUp) {
+      hasCalledWakeUp = true;
       onServerWaking();
-    }, SERVER_WAKE_THRESHOLD_MS);
+    }
+  };
+  
+  if (onServerWaking) {
+    wakeUpTimeout = setTimeout(triggerWakeUp, SERVER_WAKE_THRESHOLD_MS);
   }
   
   const fetchOptions: RequestInit = {
@@ -288,65 +332,100 @@ export const apiFetch = async <T>(
     },
   };
   
-  try {
-    console.log(`📡 API Request: ${options.method || 'GET'} ${url}`);
-    
-    const response = await fetchWithTimeout(url, fetchOptions, API_TIMEOUT_MS);
-    
-    // Clear wake-up timeout
-    if (wakeUpTimeout) clearTimeout(wakeUpTimeout);
-    
-    const elapsed = Date.now() - startTime;
-    console.log(`✅ API Response: ${response.status} (${elapsed}ms)`);
-    
-    // Handle HTTP errors
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+  // Retry loop
+  while (retryCount <= MAX_RETRIES) {
+    try {
+      const attemptLabel = retryCount > 0 ? ` (retry ${retryCount})` : '';
+      console.log(`📡 API Request${attemptLabel}: ${options.method || 'GET'} ${url}`);
+      
+      const response = await fetchWithTimeout(url, fetchOptions, API_TIMEOUT_MS);
+      
+      const elapsed = Date.now() - startTime;
+      console.log(`✅ API Response: ${response.status} (${elapsed}ms)`);
+      
+      // Handle 503 - server might be waking up, retry
+      if (response.status === 503 && retryCount < MAX_RETRIES) {
+        console.log(`⏳ Server returned 503, retrying in ${RETRY_DELAY_MS / 1000}s...`);
+        triggerWakeUp(); // Show waking up message
+        retryCount++;
+        await sleep(RETRY_DELAY_MS);
+        continue;
+      }
+      
+      // Clear wake-up timeout on success
+      if (wakeUpTimeout) clearTimeout(wakeUpTimeout);
+      
+      // Handle HTTP errors
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.message || `Sunucu hatası: ${response.status}`,
+          isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
+          retryCount,
+        };
+      }
+      
+      const data = await response.json();
       return {
-        success: false,
-        error: errorData.message || `Sunucu hatası: ${response.status}`,
+        success: true,
+        data: data.data || data,
         isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
+        retryCount,
       };
-    }
-    
-    const data = await response.json();
-    return {
-      success: true,
-      data: data.data || data,
-      isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
-    };
-    
-  } catch (error: any) {
-    // Clear wake-up timeout
-    if (wakeUpTimeout) clearTimeout(wakeUpTimeout);
-    
-    const elapsed = Date.now() - startTime;
-    console.error(`❌ API Error (${elapsed}ms):`, error);
-    
-    // Handle abort (timeout)
-    if (error.name === 'AbortError') {
+      
+    } catch (error: any) {
+      const elapsed = Date.now() - startTime;
+      console.error(`❌ API Error (${elapsed}ms):`, error.message || error);
+      
+      // Check if we should retry
+      if (isRetryableError(error) && retryCount < MAX_RETRIES) {
+        console.log(`🔄 Retrying in ${RETRY_DELAY_MS / 1000}s... (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+        triggerWakeUp(); // Show waking up message
+        retryCount++;
+        await sleep(RETRY_DELAY_MS);
+        continue;
+      }
+      
+      // Clear wake-up timeout
+      if (wakeUpTimeout) clearTimeout(wakeUpTimeout);
+      
+      // Handle abort (timeout)
+      if (error.name === 'AbortError') {
+        return {
+          success: false,
+          error: 'Bağlantı zaman aşımına uğradı (2 dakika). Sunucu yanıt vermiyor.',
+          isTimeout: true,
+          isServerWaking: true,
+          retryCount,
+        };
+      }
+      
+      // Handle network errors
+      if (error.name === 'TypeError' || error.message?.includes('fetch')) {
+        return {
+          success: false,
+          error: 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.',
+          isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
+          retryCount,
+        };
+      }
+      
       return {
         success: false,
-        error: 'Bağlantı zaman aşımına uğradı. Sunucu yanıt vermiyor.',
-        isTimeout: true,
-        isServerWaking: true,
+        error: error.message || 'Beklenmeyen bir hata oluştu.',
+        retryCount,
       };
     }
-    
-    // Handle network errors
-    if (error.name === 'TypeError' || error.message?.includes('fetch')) {
-      return {
-        success: false,
-        error: 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.',
-        isServerWaking: elapsed > SERVER_WAKE_THRESHOLD_MS,
-      };
-    }
-    
-    return {
-      success: false,
-      error: error.message || 'Beklenmeyen bir hata oluştu.',
-    };
   }
+  
+  // Should never reach here, but just in case
+  if (wakeUpTimeout) clearTimeout(wakeUpTimeout);
+  return {
+    success: false,
+    error: 'Maksimum deneme sayısına ulaşıldı.',
+    retryCount,
+  };
 };
 
 /**

@@ -241,12 +241,12 @@ const Contact: React.FC = () => {
                   className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-xl"
                 >
                   {formStatus === 'sending' ? (
-                    <span className="flex items-center flex-col sm:flex-row">
-                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                    <span className="flex items-center flex-col sm:flex-row gap-2">
+                      <Loader2 className="animate-spin h-5 w-5" />
                       {isServerWaking ? (
-                        <span className="text-sm">
-                          <Clock className="inline w-4 h-4 mr-1" />
-                          Sunucu uyanıyor, lütfen bekleyin...
+                        <span className="text-sm flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          Sunucu başlatılıyor, bu işlem 1 dakika sürebilir...
                         </span>
                       ) : (
                         'Gönderiliyor...'

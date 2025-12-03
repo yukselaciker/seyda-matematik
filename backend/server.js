@@ -610,31 +610,44 @@ app.post('/api/contact', contactLimiter, contactValidationRules, async (req, res
     await contact.save();
     console.log(`✅ Contact saved to DB: ${contact._id}`);
 
-    // 4. SEND EMAIL NOTIFICATIONS (Parallel)
-    try {
-      // Send admin notification AND user auto-reply
-      await Promise.all([
-        sendEmailNotification({ name, email, phone, message }),
-        sendAutoReply({ name, email, phone, message })
-      ]);
-      
-      console.log(`✅ Emails sent (Admin + Auto-reply)`);
-    } catch (emailError) {
-      // Log email error but don't fail the request
-      console.error('⚠️ Email send failed (but contact saved):', emailError.message);
-      
-      // Optionally, you could mark this contact for manual follow-up
-      contact.status = 'email_failed';
-      await contact.save();
-    }
-
-    // 5. RETURN SUCCESS RESPONSE
+    // 4. IMMEDIATELY RETURN SUCCESS RESPONSE (Don't wait for email)
     res.status(200).json({
       success: true,
-      message: 'Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.',
+      message: 'Mesajınız başarıyla alındı! En kısa sürede size dönüş yapacağız.',
       data: {
         id: contact._id,
         date: contact.date
+      }
+    });
+
+    // 5. SEND EMAILS IN BACKGROUND (Fire-and-Forget)
+    // This runs AFTER the response is sent to the user
+    setImmediate(async () => {
+      try {
+        console.log(`📧 Starting background email send for contact: ${contact._id}`);
+        
+        // Send admin notification AND user auto-reply
+        await Promise.all([
+          sendEmailNotification({ name, email, phone, message }),
+          sendAutoReply({ name, email, phone, message })
+        ]);
+        
+        // Update status to email_sent (silently)
+        contact.status = 'email_sent';
+        await contact.save();
+        console.log(`✅ Background emails sent successfully for: ${contact._id}`);
+        
+      } catch (emailError) {
+        // Log error but user already received success response
+        console.error(`⚠️ Background email failed for ${contact._id}:`, emailError.message);
+        
+        // Mark contact for manual follow-up (silently)
+        try {
+          contact.status = 'email_failed';
+          await contact.save();
+        } catch (saveError) {
+          console.error(`❌ Failed to update status for ${contact._id}:`, saveError.message);
+        }
       }
     });
 

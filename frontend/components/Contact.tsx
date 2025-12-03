@@ -22,7 +22,7 @@ const Contact: React.FC = () => {
 
     try {
       // Call Vercel serverless function directly with relative path
-      console.log("🚀 Sending request to /api/contact");
+      console.log("🚀 Sending request to /api/contact", contactData);
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
@@ -31,12 +31,24 @@ const Contact: React.FC = () => {
         body: JSON.stringify(contactData),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Gönderim başarısız');
+      console.log("📡 Response status:", response.status, response.statusText);
+
+      // Try to parse response as JSON safely
+      let result;
+      const responseText = await response.text();
+      console.log("📄 Response body:", responseText);
+
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("❌ Failed to parse JSON:", parseError);
+        console.error("Raw response:", responseText);
+        throw new Error('Sunucu yanıtı geçersiz. Lütfen daha sonra tekrar deneyin.');
       }
 
-      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || 'Gönderim başarısız');
+      }
 
       // Success!
       if (result.success) {

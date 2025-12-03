@@ -1,58 +1,55 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Instagram, Linkedin, CheckCircle, Loader2, AlertCircle, Clock } from 'lucide-react';
-import { API_ENDPOINTS, apiFetch } from '../config/api';
+import React, { useState, useRef } from 'react';
+import { Mail, Phone, MapPin, Instagram, Linkedin, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import emailjs from '@emailjs/browser';
+
+// ============================================
+// EMAILJS CONFIGURATION
+// ============================================
+// Get these from: https://dashboard.emailjs.com/
+// 1. Create account → Add Email Service (Gmail)
+// 2. Create Email Template
+// 3. Get Public Key from Account → API Keys
+
+const EMAILJS_SERVICE_ID = 'service_seyda'; // Your EmailJS service ID
+const EMAILJS_TEMPLATE_ID = 'template_contact'; // Your EmailJS template ID
+const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // Your EmailJS public key
 
 const Contact: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [isServerWaking, setIsServerWaking] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('sending');
     setErrorMessage('');
-    setIsServerWaking(false);
     
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-    
-    // Extract form data
-    const contactData = {
-      name: formData.get('name') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
-      message: formData.get('message') as string,
-    };
+    if (!formRef.current) return;
 
-    // Use robust apiFetch with timeout and server wake-up detection
-    const result = await apiFetch<{ id: string }>(
-      API_ENDPOINTS.CONTACT,
-      {
-        method: 'POST',
-        body: JSON.stringify(contactData),
-      },
-      () => setIsServerWaking(true) // Called if server takes > 5 seconds
-    );
+    try {
+      // Send email directly from browser using EmailJS
+      await emailjs.sendForm(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        formRef.current,
+        EMAILJS_PUBLIC_KEY
+      );
 
-    if (result.success) {
-      // Success - form submitted and email sent
+      // Success!
       setFormStatus('success');
-      setIsServerWaking(false);
-      form.reset();
-      
-      console.log('✅ Contact form submitted successfully');
+      formRef.current.reset();
+      console.log('✅ EmailJS: Mesaj başarıyla gönderildi');
       
       // Reset to idle after 5 seconds
       setTimeout(() => {
         setFormStatus('idle');
       }, 5000);
-    } else {
+      
+    } catch (error: any) {
       // Error occurred
       setFormStatus('error');
-      setIsServerWaking(false);
-      setErrorMessage(result.error || 'Mesajınız gönderilemedi.');
-      
-      console.error('❌ Contact form error:', result.error);
+      setErrorMessage('Mesajınız gönderilemedi. Lütfen WhatsApp ile iletişime geçin.');
+      console.error('❌ EmailJS error:', error);
     }
   };
 
@@ -158,7 +155,7 @@ const Contact: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form id="contact-form" className="space-y-6" onSubmit={handleSubmit}>
+              <form ref={formRef} id="contact-form" className="space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-slate-700">Adınız Soyadınız</label>
                   <input
@@ -241,16 +238,9 @@ const Contact: React.FC = () => {
                   className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-xl"
                 >
                   {formStatus === 'sending' ? (
-                    <span className="flex items-center flex-col sm:flex-row gap-2">
+                    <span className="flex items-center gap-2">
                       <Loader2 className="animate-spin h-5 w-5" />
-                      {isServerWaking ? (
-                        <span className="text-sm flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          Sunucu başlatılıyor, bu işlem 1 dakika sürebilir...
-                        </span>
-                      ) : (
-                        'Gönderiliyor...'
-                      )}
+                      Gönderiliyor...
                     </span>
                   ) : '📩 Mesajı Gönder'}
                 </button>

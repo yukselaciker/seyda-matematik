@@ -9,10 +9,10 @@ const Contact: React.FC = () => {
     e.preventDefault();
     setFormStatus('sending');
     setErrorMessage('');
-    
+
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    
+
     const contactData = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
@@ -21,15 +21,21 @@ const Contact: React.FC = () => {
     };
 
     try {
-      // Use dynamic API URL from config
-      const { apiPost } = await import('../config/api');
-      const response = await apiPost('/api/contact', contactData);
-      
+      // Call Vercel serverless function directly with relative path
+      console.log("🚀 Sending request to /api/contact");
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactData),
+      });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Gönderim başarısız');
       }
-      
+
       const result = await response.json();
 
       // Success!
@@ -37,7 +43,7 @@ const Contact: React.FC = () => {
         setFormStatus('success');
         form.reset();
         console.log('✅ Mesaj başarıyla gönderildi');
-        
+
         // Reset to idle after 5 seconds
         setTimeout(() => {
           setFormStatus('idle');
@@ -45,7 +51,7 @@ const Contact: React.FC = () => {
       } else {
         throw new Error(result.message || 'Gönderim başarısız');
       }
-      
+
     } catch (error: any) {
       // Error occurred
       setFormStatus('error');
@@ -58,7 +64,7 @@ const Contact: React.FC = () => {
     <section id="contact" className="py-20 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-          
+
           <div>
             <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl mb-6">
               İletişime Geçin
@@ -66,7 +72,7 @@ const Contact: React.FC = () => {
             <p className="text-lg text-slate-600 mb-8">
               Öğrencinizin geleceği için bir adım atın. Detaylı bilgi almak, tanışmak veya deneme dersi planlamak için bana ulaşabilirsiniz.
             </p>
-            
+
             <div className="space-y-6">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -107,23 +113,23 @@ const Contact: React.FC = () => {
             </div>
 
             <div className="mt-10 flex space-x-4">
-                <a 
-                  href="https://www.instagram.com/hocam_seyda?igsh=MXV1anE4enlzNmRuMg%3D%3D&utm_source=qr" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="p-3 bg-white rounded-full text-slate-400 hover:text-pink-600 hover:bg-pink-50 transition-all shadow-sm border border-slate-100"
-                >
-                    <Instagram className="h-6 w-6" />
-                </a>
-                <a href="#" className="p-3 bg-white rounded-full text-slate-400 hover:text-blue-700 hover:bg-blue-50 transition-all shadow-sm border border-slate-100">
-                    <Linkedin className="h-6 w-6" />
-                </a>
+              <a
+                href="https://www.instagram.com/hocam_seyda?igsh=MXV1anE4enlzNmRuMg%3D%3D&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 bg-white rounded-full text-slate-400 hover:text-pink-600 hover:bg-pink-50 transition-all shadow-sm border border-slate-100"
+              >
+                <Instagram className="h-6 w-6" />
+              </a>
+              <a href="#" className="p-3 bg-white rounded-full text-slate-400 hover:text-blue-700 hover:bg-blue-50 transition-all shadow-sm border border-slate-100">
+                <Linkedin className="h-6 w-6" />
+              </a>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
             <h3 className="text-xl font-bold text-slate-900 mb-2">Mesaj Gönderin</h3>
-            
+
             {/* Trust Badges */}
             <div className="flex flex-wrap gap-4 mb-6 text-sm text-slate-600">
               <div className="flex items-center gap-2">
@@ -139,7 +145,7 @@ const Contact: React.FC = () => {
                 <span>Zorunlu satış yok</span>
               </div>
             </div>
-            
+
             {formStatus === 'success' ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12 animate-fadeIn">
                 <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
@@ -172,8 +178,8 @@ const Contact: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-slate-700">E-posta</label>
-                      <input
+                    <label htmlFor="email" className="block text-sm font-medium text-slate-700">E-posta</label>
+                    <input
                       required
                       type="email"
                       id="email"
@@ -181,11 +187,11 @@ const Contact: React.FC = () => {
                       autoComplete="email"
                       className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50"
                       placeholder="ornek@email.com"
-                      />
+                    />
                   </div>
                   <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-slate-700">Telefon</label>
-                      <input
+                    <label htmlFor="phone" className="block text-sm font-medium text-slate-700">Telefon</label>
+                    <input
                       required
                       type="tel"
                       id="phone"
@@ -193,11 +199,11 @@ const Contact: React.FC = () => {
                       autoComplete="tel"
                       className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 bg-slate-50"
                       placeholder="05XX XXX XX XX"
-                      />
-                      <p className="mt-1 text-xs text-slate-500">WhatsApp üzerinden hızlı yanıt</p>
+                    />
+                    <p className="mt-1 text-xs text-slate-500">WhatsApp üzerinden hızlı yanıt</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-slate-700">Mesajınız</label>
                   <textarea
@@ -212,19 +218,19 @@ const Contact: React.FC = () => {
                 </div>
 
                 {formStatus === 'error' && (
-                    <div className="rounded-md bg-red-50 p-4 border border-red-200">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-red-800">Gönderim Hatası</h3>
-                                <div className="mt-2 text-sm text-red-700">
-                                    <p>{errorMessage || 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.'}</p>
-                                </div>
-                            </div>
+                  <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Gönderim Hatası</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <p>{errorMessage || 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.'}</p>
                         </div>
+                      </div>
                     </div>
+                  </div>
                 )}
 
                 {/* Privacy Notice */}

@@ -30,7 +30,7 @@ import CommonMistakes from './components/CommonMistakes';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import CookieBanner from './components/CookieBanner';
 import NotFound from './components/NotFound';
-import MathQuiz from './components/MathQuiz';
+import AnalysisWizard from './components/AnalysisWizard';
 
 // Error Boundary
 import ErrorBoundary from './components/ErrorBoundary';
@@ -42,6 +42,7 @@ import { ToastProvider } from './contexts/ToastContext';
 const AppContent: React.FC = () => {
   // State
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   // Listen for navigation changes
@@ -56,6 +57,10 @@ const AppContent: React.FC = () => {
   // --- BOOKING MODAL ---
   const openBooking = useCallback(() => setIsBookingOpen(true), []);
   const closeBooking = useCallback(() => setIsBookingOpen(false), []);
+
+  // --- WIZARD MODAL ---
+  const openWizard = useCallback(() => setIsWizardOpen(true), []);
+  const closeWizard = useCallback(() => setIsWizardOpen(false), []);
 
   // --- PRIVACY POLICY PAGE ---
   if (currentPath === '/privacy-policy' || currentPath === '/gizlilik-politikasi') {
@@ -76,7 +81,7 @@ const AppContent: React.FC = () => {
       />
 
       <main>
-        <Hero onBookingClick={openBooking} />
+        <Hero onBookingClick={openBooking} onWizardClick={openWizard} />
         <About />
         <Services onBookingClick={openBooking} />
         <CommonMistakes />
@@ -84,13 +89,13 @@ const AppContent: React.FC = () => {
         <Testimonials />
         <FAQ />
         <Roadmap />
-        <MathQuiz />
 
         <Contact />
       </main>
 
       <Footer />
       <BookingModal isOpen={isBookingOpen} onClose={closeBooking} />
+      <AnalysisWizard isOpen={isWizardOpen} onClose={closeWizard} />
 
       {/* WhatsApp Button */}
       <a

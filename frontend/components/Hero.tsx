@@ -3,9 +3,10 @@ import { ChevronRight, Calendar } from 'lucide-react';
 
 interface HeroProps {
   onBookingClick: () => void;
+  onWizardClick: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ onBookingClick }) => {
+const Hero: React.FC<HeroProps> = ({ onBookingClick, onWizardClick }) => {
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const element = document.getElementById(id);
@@ -36,10 +37,17 @@ const Hero: React.FC<HeroProps> = ({ onBookingClick }) => {
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
               <button
                 onClick={onBookingClick}
-                className="group inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-xl hover:shadow-2xl cursor-pointer hover:scale-105"
+                className="group flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg hover:shadow-xl"
               >
                 🎁 Ücretsiz Deneme Dersi Al
-                <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={onWizardClick}
+                className="group flex items-center justify-center gap-2 bg-white text-indigo-700 border-2 border-indigo-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl"
+              >
+                📊 Matematik Başarı Analizi
+                <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
             <p className="mt-4 text-sm text-slate-500 text-center lg:text-left">

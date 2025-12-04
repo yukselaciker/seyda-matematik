@@ -108,7 +108,7 @@ const AppContent: React.FC = () => {
         <MessageCircle className="h-8 w-8" />
       </a>
     </div>
-  ), [isBookingOpen, openBooking, closeBooking]);
+  ), [isBookingOpen, isWizardOpen, openBooking, closeBooking, openWizard, closeWizard]);
 
   // --- MAIN RENDER ---
   return renderLandingPage;

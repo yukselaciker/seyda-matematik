@@ -54,7 +54,7 @@ const AppContent: React.FC = () => {
   const closeBooking = useCallback(() => setIsBookingOpen(false), []);
 
   // --- PRIVACY POLICY PAGE ---
-  if (currentPath === '/privacy-policy') {
+  if (currentPath === '/privacy-policy' || currentPath === '/gizlilik-politikasi') {
     return <PrivacyPolicy />;
   }
 

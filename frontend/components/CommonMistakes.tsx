@@ -197,7 +197,7 @@ const CommonMistakes: React.FC = memo(() => {
             </a>
           </div>
           <p className="text-sm text-indigo-200 mt-4">
-            ⏱️ Ortalama yanıt süresi: 2 saat • 🔒 Bilgileriniz güvende
+            🔒 Bilgileriniz güvende
           </p>
         </div>
       </div>

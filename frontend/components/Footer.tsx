@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
           <a href="#about" onClick={(e) => handleScroll(e, 'about')} className="text-slate-300 hover:text-[#D4AF37] transition-colors cursor-pointer">Hakkımda</a>
           <a href="#services" onClick={(e) => handleScroll(e, 'services')} className="text-slate-300 hover:text-[#D4AF37] transition-colors cursor-pointer">Hizmetler</a>
           <a href="#contact" onClick={(e) => handleScroll(e, 'contact')} className="text-slate-300 hover:text-[#D4AF37] transition-colors cursor-pointer">İletişim</a>
-          <a href="/privacy-policy" className="text-slate-300 hover:text-[#D4AF37] transition-colors cursor-pointer">Gizlilik Politikası</a>
+          <a href="/gizlilik-politikasi" className="text-slate-300 hover:text-[#D4AF37] transition-colors cursor-pointer">Gizlilik Politikası</a>
         </div>
 
         <div className="text-sm text-slate-400 text-center md:text-right">

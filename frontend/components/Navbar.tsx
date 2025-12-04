@@ -13,11 +13,20 @@ const Navbar: React.FC<NavbarProps> = ({ onBookingClick }) => {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setIsOpen(false);
-    
+
     if (href.startsWith('#')) {
-        const elementId = href.substring(1);
-        const element = document.getElementById(elementId);
-        if (element) element.scrollIntoView({ behavior: 'smooth' });
+      const elementId = href.substring(1);
+      const element = document.getElementById(elementId);
+      if (element) {
+        const navbarHeight = 96; // h-24 = 96px
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
     }
   };
 
@@ -27,7 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({ onBookingClick }) => {
         <div className="flex justify-between h-24 items-center">
           <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
             <div className="h-20 w-auto transition-transform duration-300 group-hover:scale-105">
-                 <Logo className="h-full w-auto" />
+              <Logo className="h-full w-auto" />
             </div>
           </div>
 

@@ -1,18 +1,18 @@
 /**
  * AnalysisWizard.tsx - Pedagogical Competence Inventory
- * Advanced diagnostic tool based on Bloom's Taxonomy & Math Anxiety Scales
- * Analyzes: Affective Domain (Anxiety), Cognitive Domain (Foundation), Metacognition (Focus)
+ * FIXED: Weighted Scoring System with proper category differentiation
  */
 
 import React, { useState } from 'react';
-import { X, ChevronRight, ChevronLeft, Brain, Heart, Target, MessageCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Brain, Heart, Target, MessageCircle, CheckCircle, AlertTriangle, Zap } from 'lucide-react';
 
 interface QuestionOption {
     text: string;
-    scores: {
-        anxiety?: number;
-        foundation?: number;
-        focus?: number;
+    categoryScores: {
+        anxiety: number;
+        foundation: number;
+        focus: number;
+        discipline: number;
     };
 }
 
@@ -28,11 +28,12 @@ interface CategoryScores {
     anxiety: number;
     foundation: number;
     focus: number;
+    discipline: number;
 }
 
 interface DiagnosisResult {
     title: string;
-    category: 'anxiety' | 'foundation' | 'focus' | 'balanced';
+    category: 'anxiety' | 'foundation' | 'focus' | 'discipline';
     description: string;
     recommendations: string[];
     duration: string;
@@ -50,15 +51,15 @@ const questions: Question[] = [
         options: [
             {
                 text: 'Çok gergin oluyor, fiziksel belirtiler (karın ağrısı, baş ağrısı, uyku sorunu) yaşıyor',
-                scores: { anxiety: 3, foundation: 0, focus: 0 }
+                categoryScores: { anxiety: 10, foundation: 0, focus: 0, discipline: 0 }
             },
             {
                 text: 'Biraz endişeli ama yönetebiliyor, sınavdan önce hafif stres hissediyor',
-                scores: { anxiety: 1, foundation: 0, focus: 0 }
+                categoryScores: { anxiety: 5, foundation: 0, focus: 0, discipline: 0 }
             },
             {
                 text: 'Gayet rahat, kendine güveniyor ve sınava hazır hissediyor',
-                scores: { anxiety: 0, foundation: 1, focus: 1 }
+                categoryScores: { anxiety: 0, foundation: 3, focus: 2, discipline: 0 }
             }
         ]
     },
@@ -70,19 +71,19 @@ const questions: Question[] = [
         options: [
             {
                 text: 'Soruyu okumadan "Ben bunu yapamam" deyip geçiyor, öğrenilmiş çaresizlik gösteriyor',
-                scores: { anxiety: 2, foundation: 0, focus: 0 }
+                categoryScores: { anxiety: 8, foundation: 0, focus: 0, discipline: 0 }
             },
             {
                 text: 'Dört işlem yapabiliyor ama sorunun mantığını kuramıyor, ne istendiğini anlamıyor',
-                scores: { anxiety: 0, foundation: 0, focus: 1 }
+                categoryScores: { anxiety: 0, foundation: 10, focus: 0, discipline: 0 }
             },
             {
                 text: 'Sorunun mantığını kuruyor ama işlem hatası veya dikkatsizlik yapıyor',
-                scores: { anxiety: 0, foundation: 2, focus: 0 }
+                categoryScores: { anxiety: 0, foundation: 2, focus: 8, discipline: 0 }
             },
             {
                 text: 'Soruyu anlıyor, mantığı kuruyor ve doğru çözüme ulaşabiliyor',
-                scores: { anxiety: 0, foundation: 3, focus: 2 }
+                categoryScores: { anxiety: 0, foundation: 0, focus: 0, discipline: 5 }
             }
         ]
     },
@@ -94,19 +95,19 @@ const questions: Question[] = [
         options: [
             {
                 text: 'Konuyu hiç bilmiyor / hatırlamıyor, öğrenme eksikliği açıkça görülüyor',
-                scores: { anxiety: 0, foundation: 0, focus: 0 }
+                categoryScores: { anxiety: 0, foundation: 10, focus: 0, discipline: 0 }
             },
             {
                 text: 'Soruyu yanlış okuyor, eksik okuyor veya dikkat hatası yapıyor',
-                scores: { anxiety: 0, foundation: 2, focus: 0 }
+                categoryScores: { anxiety: 0, foundation: 0, focus: 10, discipline: 0 }
             },
             {
                 text: 'Konuyu biliyor ama süreyi yetiştiremiyor, pratik eksikliği var',
-                scores: { anxiety: 0, foundation: 2, focus: 1 }
+                categoryScores: { anxiety: 0, foundation: 3, focus: 5, discipline: 0 }
             },
             {
                 text: 'Sınav ortamında panik yaşıyor, evde yapabildiği soruları sınavda yapamıyor',
-                scores: { anxiety: 3, foundation: 1, focus: 0 }
+                categoryScores: { anxiety: 10, foundation: 0, focus: 0, discipline: 0 }
             }
         ]
     },
@@ -118,35 +119,73 @@ const questions: Question[] = [
         options: [
             {
                 text: 'Sadece sınavdan sınava çalışıyor, düzenli bir rutini yok',
-                scores: { anxiety: 1, foundation: 0, focus: 0 }
+                categoryScores: { anxiety: 0, foundation: 0, focus: 0, discipline: 10 }
             },
             {
                 text: 'Masa başına oturuyor ama çabuk sıkılıyor, dikkatini toparlayamıyor',
-                scores: { anxiety: 0, foundation: 1, focus: 0 }
+                categoryScores: { anxiety: 0, foundation: 0, focus: 7, discipline: 3 }
             },
             {
                 text: 'Düzenli çalışmaya çalışıyor ama verimlilik düşük, neyi nasıl çalışacağını bilmiyor',
-                scores: { anxiety: 0, foundation: 0, focus: 1 }
+                categoryScores: { anxiety: 0, foundation: 5, focus: 0, discipline: 5 }
             },
             {
                 text: 'Planlı ve düzenli çalışıyor, öğrendiği teknikleri uygulayabiliyor',
-                scores: { anxiety: 0, foundation: 2, focus: 2 }
+                categoryScores: { anxiety: 0, foundation: 0, focus: 0, discipline: 0 }
             }
         ]
     }
 ];
 
-const calculateDiagnosis = (scores: CategoryScores): DiagnosisResult => {
-    const { anxiety, foundation, focus } = scores;
+const calculateDiagnosis = (totalScores: CategoryScores): DiagnosisResult => {
+    // Debug logging
+    console.log('Final Scores:', totalScores);
 
-    // Scenario A: Psychological Barrier (High Anxiety with Good Foundation)
-    if (anxiety >= 6 && foundation >= 4) {
+    // Find the category with highest score
+    const scoresArray = [
+        { category: 'foundation' as const, score: totalScores.foundation },
+        { category: 'anxiety' as const, score: totalScores.anxiety },
+        { category: 'focus' as const, score: totalScores.focus },
+        { category: 'discipline' as const, score: totalScores.discipline }
+    ];
+
+    // Sort by score descending, with foundation as tie-breaker priority
+    scoresArray.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        // Tie-breaker: foundation > anxiety > focus > discipline
+        const priority = { foundation: 4, anxiety: 3, focus: 2, discipline: 1 };
+        return priority[b.category] - priority[a.category];
+    });
+
+    const winner = scoresArray[0];
+    console.log('Winner Category:', winner.category, 'Score:', winner.score);
+
+    // Return diagnosis based on winner
+    if (winner.category === 'foundation') {
+        return {
+            title: '📚 Kavramsal Temel Eksikliği (Sarmal Yapı Sorunu)',
+            category: 'foundation',
+            description: 'Matematiğin temellerinde boşluklar tespit edildi. Mevcut sınıf konularına geçmeden önce acil "Temel Tamamlama Kampı" yapılmalı. Sarmal yapıdaki eksiklikler üst konularda kalıcı öğrenmeyi engelliyor.',
+            recommendations: [
+                'Geriye dönük kavram takviyesi (sarmal yapı yaklaşımı)',
+                'Somut materyallerle kavramsal öğrenme',
+                'Adım adım, sabırlı ve sistematik ilerleyiş',
+                'Her yeni konu öncesi ön koşul kontrolü'
+            ],
+            duration: '10-14 Haftalık Yoğun Temel İnşa Programı',
+            priority: 'high',
+            color: 'from-amber-500 to-orange-600',
+            icon: <Target className="w-10 h-10 text-white" />
+        };
+    }
+
+    if (winner.category === 'anxiety') {
         return {
             title: '🧠 Matematik Kaygısı ve Özgüven Blokajı',
             category: 'anxiety',
-            description: 'Öğrencinizin akademik potansiyeli ve bilişsel kapasitesi mevcut, ancak "Öğrenilmiş Çaresizlik" veya yüksek sınav kaygısı performansı baskılıyor. Bu durum, psikolojik bariyerlerin akademik başarıyı engellediği klasik bir durumdur.',
+            description: 'Öğrenci yapabileceğine inanmadığı için potansiyelini yansıtamıyor. "Öğrenilmiş Çaresizlik" sendromu ve yüksek sınav kaygısı performansı baskılıyor. Öncelik: Motivasyon ve kolaydan zora başarı deneyimleri.',
             recommendations: [
-                'Öncelik: Özgüven inşası ve kaygı yönetimi teknikleri',
+                'Özgüven inşası ve kaygı yönetimi teknikleri',
                 'Başarı deneyimleri ile pozitif pekiştirme',
                 'Küçük hedeflerle kademeli ilerleme',
                 'Sınav simülasyonları ile desensitizasyon'
@@ -158,31 +197,11 @@ const calculateDiagnosis = (scores: CategoryScores): DiagnosisResult => {
         };
     }
 
-    // Scenario B: Foundation Gap (Low Foundation Score)
-    if (foundation <= 3) {
+    if (winner.category === 'focus') {
         return {
-            title: '📚 Kavramsal Temel Eksikliği (Sarmal Yapı Sorunu)',
-            category: 'foundation',
-            description: 'Matematiğin sarmal yapısında geçmiş yıllara ait kritik boşluklar tespit edildi. Mevcut sınıf konularına yüklenilmeden önce temel kavramların sağlamlaştırılması şarttır. Bu eksiklik giderilmediği sürece üst düzey konularda kalıcı öğrenme gerçekleşmeyecektir.',
-            recommendations: [
-                'Acil "Temel Tamamlama Kampı" uygulanmalı',
-                'Sarmal yapıda geriye dönük kavram takviyesi',
-                'Somut materyallerle kavramsal öğrenme',
-                'Adım adım, sabırlı ve sistematik ilerleyiş'
-            ],
-            duration: '10-14 Haftalık Yoğun Temel İnşa Programı',
-            priority: 'high',
-            color: 'from-amber-500 to-orange-600',
-            icon: <Target className="w-10 h-10 text-white" />
-        };
-    }
-
-    // Scenario C: Focus & Attention Issues (Low Focus Score)
-    if (focus <= 2 && foundation >= 4) {
-        return {
-            title: '🎯 Bilişsel Dikkat ve Odak Yönetimi Sorunu',
+            title: '🎯 Dikkat Yönetimi ve İşlem Hatası Sorunu',
             category: 'focus',
-            description: 'Konu hakimiyeti ve kavramsal anlama yeterli düzeyde, ancak "Seçici Dikkat" kapasitesi ve işlem disiplini zayıf. Bu durum genellikle dikkatsizlik hatalarına, süre yönetimi problemlerine ve potansiyelin altında performansa yol açar.',
+            description: 'Konuyu biliyor ama basit hatalar yapıyor. "Seçici Dikkat" kapasitesi zayıf, dikkatsizlik ve süre yönetimi problemleri var. Potansiyelin altında performans gösteriyor.',
             recommendations: [
                 'Dikkat ve konsantrasyon egzersizleri',
                 'Yeni nesil soru pratiği ile stratejik okuma',
@@ -196,61 +215,48 @@ const calculateDiagnosis = (scores: CategoryScores): DiagnosisResult => {
         };
     }
 
-    // Scenario D: Moderate Anxiety with Foundation Issues
-    if (anxiety >= 4 && foundation <= 4) {
-        return {
-            title: '⚠️ Karma Profil: Kaygı + Kavramsal Eksiklik',
-            category: 'anxiety',
-            description: 'Öğrencinizde hem psikolojik bariyer hem de temel bilgi eksiklikleri bir arada gözlemleniyor. Bu durum müdahaleyi daha hassas ve çok yönlü yapmayı gerektiriyor. Başarı için hem akademik hem de duygusal destek şart.',
-            recommendations: [
-                'Eş zamanlı psikolojik destek ve akademik takviye',
-                'Motivasyon odaklı, sabırlı yaklaşım',
-                'Küçük kazanımlarla özgüven artışı',
-                'Temel konularda ustalaşma deneyimi'
-            ],
-            duration: '12-16 Haftalık Bütüncül Destek Programı',
-            priority: 'high',
-            color: 'from-purple-500 to-violet-600',
-            icon: <AlertTriangle className="w-10 h-10 text-white" />
-        };
-    }
-
-    // Scenario E: Balanced / Good Performance
+    // discipline wins or low scores everywhere
     return {
-        title: '🌟 Dengeli Profil: İleri Düzey Hazır',
-        category: 'balanced',
-        description: 'Öğrenciniz psikolojik, bilişsel ve öz-düzenleme açısından dengeli ve sağlam bir profil sergiliyor. Mevcut hedeflere ulaşmak için stratejik destek ve ileri düzey koçluk yeterli olacaktır.',
+        title: '⚡ Çalışma Disiplini ve Motivasyon İhtiyacı',
+        category: 'discipline',
+        description: 'Düzenli çalışma rutini eksik. Potansiyel var ama sistematik takip ve öğrenci koçluğu gerekiyor. Profesyonel rehberlik ile çalışma alışkanlıkları kazandırılmalı.',
         recommendations: [
-            'İleri düzey problem çözme teknikleri',
-            'Olimpiyat ve yarışma soruları ile meydan okuma',
-            'Hız ve doğruluk optimizasyonu',
-            'Stratejik sınav teknikleri ve zaman yönetimi'
+            'Kişiselleştirilmiş çalışma planı oluşturma',
+            'Haftalık hedef belirleme ve takip sistemi',
+            'Motivasyon artırıcı mini ödüller',
+            'Düzenli öğretmen-veli iletişimi'
         ],
-        duration: '6-8 Haftalık İleri Düzey Koçluk',
-        priority: 'low',
-        color: 'from-green-500 to-emerald-600',
-        icon: <CheckCircle className="w-10 h-10 text-white" />
+        duration: '8-10 Haftalık Öğrenci Koçluğu Programı',
+        priority: 'medium',
+        color: 'from-purple-500 to-violet-600',
+        icon: <Zap className="w-10 h-10 text-white" />
     };
 };
 
 const AnalysisWizard: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
     const [currentStep, setCurrentStep] = useState(0);
-    const [answers, setAnswers] = useState<QuestionOption[]>([]);
+    const [selectedOptions, setSelectedOptions] = useState<QuestionOption[]>([]);
     const [showResult, setShowResult] = useState(false);
-    const [scores, setScores] = useState<CategoryScores>({ anxiety: 0, foundation: 0, focus: 0 });
+    const [totalScores, setTotalScores] = useState<CategoryScores>({
+        anxiety: 0,
+        foundation: 0,
+        focus: 0,
+        discipline: 0
+    });
 
     if (!isOpen) return null;
 
     const handleAnswer = (option: QuestionOption) => {
-        const newAnswers = [...answers, option];
-        setAnswers(newAnswers);
+        const newOptions = [...selectedOptions, option];
+        setSelectedOptions(newOptions);
 
-        // Update scores
-        const newScores = { ...scores };
-        if (option.scores.anxiety) newScores.anxiety += option.scores.anxiety;
-        if (option.scores.foundation) newScores.foundation += option.scores.foundation;
-        if (option.scores.focus) newScores.focus += option.scores.focus;
-        setScores(newScores);
+        // Update total scores
+        const newScores = { ...totalScores };
+        newScores.anxiety += option.categoryScores.anxiety;
+        newScores.foundation += option.categoryScores.foundation;
+        newScores.focus += option.categoryScores.focus;
+        newScores.discipline += option.categoryScores.discipline;
+        setTotalScores(newScores);
 
         setTimeout(() => {
             if (currentStep < questions.length - 1) {
@@ -263,28 +269,29 @@ const AnalysisWizard: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
     const handleBack = () => {
         if (currentStep > 0) {
-            const removedAnswer = answers[answers.length - 1];
+            const removedOption = selectedOptions[selectedOptions.length - 1];
 
             // Revert scores
-            const newScores = { ...scores };
-            if (removedAnswer.scores.anxiety) newScores.anxiety -= removedAnswer.scores.anxiety;
-            if (removedAnswer.scores.foundation) newScores.foundation -= removedAnswer.scores.foundation;
-            if (removedAnswer.scores.focus) newScores.focus -= removedAnswer.scores.focus;
-            setScores(newScores);
+            const newScores = { ...totalScores };
+            newScores.anxiety -= removedOption.categoryScores.anxiety;
+            newScores.foundation -= removedOption.categoryScores.foundation;
+            newScores.focus -= removedOption.categoryScores.focus;
+            newScores.discipline -= removedOption.categoryScores.discipline;
+            setTotalScores(newScores);
 
             setCurrentStep(currentStep - 1);
-            setAnswers(answers.slice(0, -1));
+            setSelectedOptions(selectedOptions.slice(0, -1));
         }
     };
 
     const handleReset = () => {
         setCurrentStep(0);
-        setAnswers([]);
+        setSelectedOptions([]);
         setShowResult(false);
-        setScores({ anxiety: 0, foundation: 0, focus: 0 });
+        setTotalScores({ anxiety: 0, foundation: 0, focus: 0, discipline: 0 });
     };
 
-    const result = showResult ? calculateDiagnosis(scores) : null;
+    const result = showResult ? calculateDiagnosis(totalScores) : null;
     const progress = ((currentStep + 1) / questions.length) * 100;
 
     // Generate WhatsApp message
@@ -412,7 +419,7 @@ Profesyonel destek programı oluşturmak ve detaylı görüşmek istiyoruz.`;
                             <div className="space-y-3 mb-4">
                                 <h4 className="font-bold text-slate-800 flex items-center gap-2">
                                     <Target className="w-5 h-5 text-indigo-600" />
-                                    Önerilen Müdahale Strateji:
+                                    Önerilen Müdahale Stratejisi:
                                 </h4>
                                 <ul className="space-y-2">
                                     {result.recommendations.map((rec, idx) => (
@@ -430,18 +437,22 @@ Profesyonel destek programı oluşturmak ve detaylı görüşmek istiyoruz.`;
                         </div>
 
                         {/* Category Scores Display */}
-                        <div className="grid grid-cols-3 gap-3 mb-6">
+                        <div className="grid grid-cols-4 gap-2 mb-6">
                             <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-center">
                                 <p className="text-xs text-rose-600 mb-1">Kaygı</p>
-                                <p className="text-2xl font-bold text-rose-700">{scores.anxiety}</p>
+                                <p className="text-xl font-bold text-rose-700">{totalScores.anxiety}</p>
                             </div>
                             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
                                 <p className="text-xs text-amber-600 mb-1">Temel</p>
-                                <p className="text-2xl font-bold text-amber-700">{scores.foundation}</p>
+                                <p className="text-xl font-bold text-amber-700">{totalScores.foundation}</p>
                             </div>
                             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
                                 <p className="text-xs text-blue-600 mb-1">Odak</p>
-                                <p className="text-2xl font-bold text-blue-700">{scores.focus}</p>
+                                <p className="text-xl font-bold text-blue-700">{totalScores.focus}</p>
+                            </div>
+                            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center">
+                                <p className="text-xs text-purple-600 mb-1">Disiplin</p>
+                                <p className="text-xl font-bold text-purple-700">{totalScores.discipline}</p>
                             </div>
                         </div>
 

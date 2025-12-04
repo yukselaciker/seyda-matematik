@@ -6,7 +6,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Hizmetler', href: '#services' },
   { label: 'Neden Ben?', href: '#whyme' },
   { label: 'Başarılar', href: '#testimonials' },
-  { label: 'Matematik Asistanı', href: '#ai-helper' },
   { label: 'İletişim', href: '#contact' },
 ];
 

@@ -28,6 +28,7 @@ import FAQ from './components/FAQ';
 import CommonMistakes from './components/CommonMistakes';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import CookieBanner from './components/CookieBanner';
+import NotFound from './components/NotFound';
 
 // Error Boundary
 import ErrorBoundary from './components/ErrorBoundary';
@@ -57,6 +58,12 @@ const AppContent: React.FC = () => {
   // --- PRIVACY POLICY PAGE ---
   if (currentPath === '/privacy-policy' || currentPath === '/gizlilik-politikasi') {
     return <PrivacyPolicy />;
+  }
+
+  // --- 404 NOT FOUND PAGE ---
+  const validPaths = ['/', '/privacy-policy', '/gizlilik-politikasi'];
+  if (!validPaths.includes(currentPath)) {
+    return <NotFound />;
   }
 
   // --- RENDER LANDING PAGE ---

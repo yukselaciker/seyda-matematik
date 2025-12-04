@@ -39,14 +39,6 @@ const faqData: FAQItem[] = [
   {
     question: "Kaç öğrenci ile aynı anda ders yapıyorsunuz?",
     answer: "Hem birebir hem de grup dersleri yapıyorum. Grup derslerimiz en fazla 3 kişilik küçük gruplardan oluşur. Birebir derslerde öğrenciye %100 odaklanırken, grup derslerinde arkadaşlarla birlikte öğrenme avantajı sunuyorum. Size en uygun olanı birlikte belirleriz."
-  },
-  {
-    question: "Ödeme nasıl yapılıyor?",
-    answer: "Havale/EFT veya nakit ödeme kabul ediyorum. Aylık paket sistemi ile çalışıyorum. Paket başlangıcında ödeme alınır. Tüm paketlerde ilk ders ücretsiz deneme hakkı vardır."
-  },
-  {
-    question: "İptal politikanız nedir?",
-    answer: "24 saat önceden haber verirseniz ders ücretsiz olarak ertelenir ve başka bir güne alınır. Acil durumlar için daha esnek davranabilirim. İlk 2 dersten sonra memnun kalmazsanız, kalan derslerin ücretini iade ediyorum."
   }
 ];
 

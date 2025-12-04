@@ -1,124 +1,257 @@
 /**
- * AnalysisWizard.tsx - Professional Math Success Analysis Wizard
- * Modal-based diagnostic tool with smart recommendations
+ * AnalysisWizard.tsx - Pedagogical Competence Inventory
+ * Advanced diagnostic tool based on Bloom's Taxonomy & Math Anxiety Scales
+ * Analyzes: Affective Domain (Anxiety), Cognitive Domain (Foundation), Metacognition (Focus)
  */
 
 import React, { useState } from 'react';
-import { X, ChevronRight, ChevronLeft, Target, TrendingUp, MessageCircle, CheckCircle } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Brain, Heart, Target, MessageCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+
+interface QuestionOption {
+    text: string;
+    scores: {
+        anxiety?: number;
+        foundation?: number;
+        focus?: number;
+    };
+}
 
 interface Question {
     id: string;
+    domain: string;
     question: string;
-    options: { value: string; label: string }[];
+    subtitle: string;
+    options: QuestionOption[];
 }
 
-interface Answer {
-    questionId: string;
-    value: string;
-    label: string;
+interface CategoryScores {
+    anxiety: number;
+    foundation: number;
+    focus: number;
+}
+
+interface DiagnosisResult {
+    title: string;
+    category: 'anxiety' | 'foundation' | 'focus' | 'balanced';
+    description: string;
+    recommendations: string[];
+    duration: string;
+    priority: 'high' | 'medium' | 'low';
+    color: string;
+    icon: React.ReactNode;
 }
 
 const questions: Question[] = [
     {
-        id: 'grade',
-        question: 'Çocuğunuz kaçıncı sınıfa gidiyor?',
+        id: 'affective',
+        domain: 'Duyuşsal Alan - Kaygı Değerlendirmesi',
+        question: 'Matematik sınavı yaklaştığında öğrencinizin ruh hali nasıl değişiyor?',
+        subtitle: 'Bu soru matematik kaygısı seviyesini ölçer',
         options: [
-            { value: '4-5', label: '4-5. Sınıf' },
-            { value: '6-7', label: '6-7. Sınıf' },
-            { value: '8-lgs', label: '8. Sınıf (LGS Hazırlık)' },
-            { value: '9-12', label: '9-10. Sınıf' }
+            {
+                text: 'Çok gergin oluyor, fiziksel belirtiler (karın ağrısı, baş ağrısı, uyku sorunu) yaşıyor',
+                scores: { anxiety: 3, foundation: 0, focus: 0 }
+            },
+            {
+                text: 'Biraz endişeli ama yönetebiliyor, sınavdan önce hafif stres hissediyor',
+                scores: { anxiety: 1, foundation: 0, focus: 0 }
+            },
+            {
+                text: 'Gayet rahat, kendine güveniyor ve sınava hazır hissediyor',
+                scores: { anxiety: 0, foundation: 1, focus: 1 }
+            }
         ]
     },
     {
-        id: 'performance',
-        question: 'Matematik dersi not ortalaması veya deneme netleri nasıl?',
+        id: 'cognitive',
+        domain: 'Bilişsel Alan - Kavramsal Temel',
+        question: 'Yeni nesil (uzun metinli) matematik sorularıyla karşılaştığında tepkisi ne oluyor?',
+        subtitle: 'Bu soru kavramsal anlama ve öz-yeterlilik düzeyini ölçer',
         options: [
-            { value: 'low', label: '0-40 Net / 0-50 Not (Düşük)' },
-            { value: 'medium', label: '40-70 Net / 50-70 Not (Orta)' },
-            { value: 'high', label: '70-100 Net / 70-85 Not (İyi)' },
-            { value: 'excellent', label: '85-100 Net / 85+ Not (Mükemmel)' }
+            {
+                text: 'Soruyu okumadan "Ben bunu yapamam" deyip geçiyor, öğrenilmiş çaresizlik gösteriyor',
+                scores: { anxiety: 2, foundation: 0, focus: 0 }
+            },
+            {
+                text: 'Dört işlem yapabiliyor ama sorunun mantığını kuramıyor, ne istendiğini anlamıyor',
+                scores: { anxiety: 0, foundation: 0, focus: 1 }
+            },
+            {
+                text: 'Sorunun mantığını kuruyor ama işlem hatası veya dikkatsizlik yapıyor',
+                scores: { anxiety: 0, foundation: 2, focus: 0 }
+            },
+            {
+                text: 'Soruyu anlıyor, mantığı kuruyor ve doğru çözüme ulaşabiliyor',
+                scores: { anxiety: 0, foundation: 3, focus: 2 }
+            }
         ]
     },
     {
-        id: 'difficulty',
-        question: 'En çok nerede zorlanıyor?',
+        id: 'metacognition',
+        domain: 'Üst Biliş - Hata Analizi',
+        question: 'Deneme sınavlarındaki yanlışlarının temel sebebi genelde nedir?',
+        subtitle: 'Bu soru öğrenme stratejileri ve hata kaynaklarını tespit eder',
         options: [
-            { value: 'basics', label: '🧮 Temel Kavram Eksikliği (Çarpım tablosu, kesir, oran vb.)' },
-            { value: 'operations', label: '⚠️ İşlem Hatası (Bildiği konularda dikkatsizlik)' },
-            { value: 'new-gen', label: '🧩 Yeni Nesil Sorular (Okuduğunu anlamama)' },
-            { value: 'time', label: '⏱️ Süre Yetiştirme (Yavaş çözüyor)' }
+            {
+                text: 'Konuyu hiç bilmiyor / hatırlamıyor, öğrenme eksikliği açıkça görülüyor',
+                scores: { anxiety: 0, foundation: 0, focus: 0 }
+            },
+            {
+                text: 'Soruyu yanlış okuyor, eksik okuyor veya dikkat hatası yapıyor',
+                scores: { anxiety: 0, foundation: 2, focus: 0 }
+            },
+            {
+                text: 'Konuyu biliyor ama süreyi yetiştiremiyor, pratik eksikliği var',
+                scores: { anxiety: 0, foundation: 2, focus: 1 }
+            },
+            {
+                text: 'Sınav ortamında panik yaşıyor, evde yapabildiği soruları sınavda yapamıyor',
+                scores: { anxiety: 3, foundation: 1, focus: 0 }
+            }
         ]
     },
     {
-        id: 'goal',
-        question: 'Hedefiniz nedir?',
+        id: 'self_regulation',
+        domain: 'Öz-Düzenleme - Çalışma Rutini',
+        question: 'Evdeki matematik çalışma rutini nasıl?',
+        subtitle: 'Bu soru öz-disiplin ve çalışma alışkanlıklarını değerlendirir',
         options: [
-            { value: 'pass', label: '📚 Sınıfı Başarıyla Geçsin' },
-            { value: 'good-school', label: '🎓 İyi Bir Lise Kazansın' },
-            { value: 'top-school', label: '🏆 Fen Lisesi / Derece Yapsın' },
-            { value: 'confidence', label: '💪 Özgüven Kazansın ve Matematik Sevsin' }
+            {
+                text: 'Sadece sınavdan sınava çalışıyor, düzenli bir rutini yok',
+                scores: { anxiety: 1, foundation: 0, focus: 0 }
+            },
+            {
+                text: 'Masa başına oturuyor ama çabuk sıkılıyor, dikkatini toparlayamıyor',
+                scores: { anxiety: 0, foundation: 1, focus: 0 }
+            },
+            {
+                text: 'Düzenli çalışmaya çalışıyor ama verimlilik düşük, neyi nasıl çalışacağını bilmiyor',
+                scores: { anxiety: 0, foundation: 0, focus: 1 }
+            },
+            {
+                text: 'Planlı ve düzenli çalışıyor, öğrendiği teknikleri uygulayabiliyor',
+                scores: { anxiety: 0, foundation: 2, focus: 2 }
+            }
         ]
     }
 ];
 
-const getAnalysisResult = (answers: Answer[]) => {
-    const difficulty = answers.find(a => a.questionId === 'difficulty')?.value;
-    const performance = answers.find(a => a.questionId === 'performance')?.value;
-    const goal = answers.find(a => a.questionId === 'goal')?.value;
-    const grade = answers.find(a => a.questionId === 'grade')?.value;
+const calculateDiagnosis = (scores: CategoryScores): DiagnosisResult => {
+    const { anxiety, foundation, focus } = scores;
 
-    let diagnosis = '';
-    let recommendation = '';
-    let duration = '';
-    let color = 'from-indigo-500 to-purple-600';
-
-    // Smart diagnosis logic
-    if (difficulty === 'basics') {
-        diagnosis = '🎯 Teşhis: Temel Kavram Eksikliği';
-        recommendation = 'Öncelikle temel konuları pekiştirip, adım adım ilerleme stratejisi ile sağlam bir matematik altyapısı oluşturacağız.';
-        duration = '6-8 Haftalık Yoğun Temel Kampı';
-        color = 'from-orange-500 to-red-600';
-    } else if (difficulty === 'new-gen') {
-        diagnosis = '🧩 Teşhis: Okuduğunu Anlama ve Mantık Muhakeme Eksikliği';
-        recommendation = 'Yeni nesil soruları çözmek için stratejik yaklaşım ve soru analizi çalışmaları yapacağız. Problem çözme becerilerini geliştireceğiz.';
-        duration = '4-6 Haftalık Yeni Nesil Soru Kampı';
-        color = 'from-blue-500 to-indigo-600';
-    } else if (difficulty === 'operations') {
-        diagnosis = '⚠️ Teşhis: Dikkat ve Hız Problemi';
-        recommendation = 'Bildiği konularda yapılan hataları minimize etmek için dikkat artırıcı teknikleri ve pratik stratejileri uygulayacağız.';
-        duration = '3-4 Haftalık Sınav Stratejisi Eğitimi';
-        color = 'from-amber-500 to-orange-600';
-    } else if (difficulty === 'time') {
-        diagnosis = '⏱️ Teşhis: Hız ve Zaman Yönetimi Sorunu';
-        recommendation = 'Hızlı çözüm teknikleri, kısa yol stratejileri ve zaman yönetimi becerileri kazandıracağız.';
-        duration = '3-4 Haftalık Hız Geliştirme Programı';
-        color = 'from-green-500 to-teal-600';
+    // Scenario A: Psychological Barrier (High Anxiety with Good Foundation)
+    if (anxiety >= 6 && foundation >= 4) {
+        return {
+            title: '🧠 Matematik Kaygısı ve Özgüven Blokajı',
+            category: 'anxiety',
+            description: 'Öğrencinizin akademik potansiyeli ve bilişsel kapasitesi mevcut, ancak "Öğrenilmiş Çaresizlik" veya yüksek sınav kaygısı performansı baskılıyor. Bu durum, psikolojik bariyerlerin akademik başarıyı engellediği klasik bir durumdur.',
+            recommendations: [
+                'Öncelik: Özgüven inşası ve kaygı yönetimi teknikleri',
+                'Başarı deneyimleri ile pozitif pekiştirme',
+                'Küçük hedeflerle kademeli ilerleme',
+                'Sınav simülasyonları ile desensitizasyon'
+            ],
+            duration: '8-12 Haftalık Psikolojik Destek Odaklı Program',
+            priority: 'high',
+            color: 'from-rose-500 to-pink-600',
+            icon: <Heart className="w-10 h-10 text-white" />
+        };
     }
 
-    // Adjust for high performers
-    if (performance === 'excellent' || goal === 'top-school') {
-        diagnosis = '🏆 Teşhis: Zirveye Yolculuk';
-        recommendation = 'Hedef okula ulaşmak için ileri düzey sorular, olimpiyat soruları ve tam puan stratejileri üzerinde çalışacağız.';
-        duration = '8-12 Haftalık Derece Programı';
-        color = 'from-purple-500 to-pink-600';
+    // Scenario B: Foundation Gap (Low Foundation Score)
+    if (foundation <= 3) {
+        return {
+            title: '📚 Kavramsal Temel Eksikliği (Sarmal Yapı Sorunu)',
+            category: 'foundation',
+            description: 'Matematiğin sarmal yapısında geçmiş yıllara ait kritik boşluklar tespit edildi. Mevcut sınıf konularına yüklenilmeden önce temel kavramların sağlamlaştırılması şarttır. Bu eksiklik giderilmediği sürece üst düzey konularda kalıcı öğrenme gerçekleşmeyecektir.',
+            recommendations: [
+                'Acil "Temel Tamamlama Kampı" uygulanmalı',
+                'Sarmal yapıda geriye dönük kavram takviyesi',
+                'Somut materyallerle kavramsal öğrenme',
+                'Adım adım, sabırlı ve sistematik ilerleyiş'
+            ],
+            duration: '10-14 Haftalık Yoğun Temel İnşa Programı',
+            priority: 'high',
+            color: 'from-amber-500 to-orange-600',
+            icon: <Target className="w-10 h-10 text-white" />
+        };
     }
 
-    return { diagnosis, recommendation, duration, color, answers };
+    // Scenario C: Focus & Attention Issues (Low Focus Score)
+    if (focus <= 2 && foundation >= 4) {
+        return {
+            title: '🎯 Bilişsel Dikkat ve Odak Yönetimi Sorunu',
+            category: 'focus',
+            description: 'Konu hakimiyeti ve kavramsal anlama yeterli düzeyde, ancak "Seçici Dikkat" kapasitesi ve işlem disiplini zayıf. Bu durum genellikle dikkatsizlik hatalarına, süre yönetimi problemlerine ve potansiyelin altında performansa yol açar.',
+            recommendations: [
+                'Dikkat ve konsantrasyon egzersizleri',
+                'Yeni nesil soru pratiği ile stratejik okuma',
+                'Süre yönetimi ve hız çalışmaları',
+                'Sistematik hata analizi alışkanlığı'
+            ],
+            duration: '6-8 Haftalık Odak Geliştirme Programı',
+            priority: 'medium',
+            color: 'from-blue-500 to-indigo-600',
+            icon: <Brain className="w-10 h-10 text-white" />
+        };
+    }
+
+    // Scenario D: Moderate Anxiety with Foundation Issues
+    if (anxiety >= 4 && foundation <= 4) {
+        return {
+            title: '⚠️ Karma Profil: Kaygı + Kavramsal Eksiklik',
+            category: 'anxiety',
+            description: 'Öğrencinizde hem psikolojik bariyer hem de temel bilgi eksiklikleri bir arada gözlemleniyor. Bu durum müdahaleyi daha hassas ve çok yönlü yapmayı gerektiriyor. Başarı için hem akademik hem de duygusal destek şart.',
+            recommendations: [
+                'Eş zamanlı psikolojik destek ve akademik takviye',
+                'Motivasyon odaklı, sabırlı yaklaşım',
+                'Küçük kazanımlarla özgüven artışı',
+                'Temel konularda ustalaşma deneyimi'
+            ],
+            duration: '12-16 Haftalık Bütüncül Destek Programı',
+            priority: 'high',
+            color: 'from-purple-500 to-violet-600',
+            icon: <AlertTriangle className="w-10 h-10 text-white" />
+        };
+    }
+
+    // Scenario E: Balanced / Good Performance
+    return {
+        title: '🌟 Dengeli Profil: İleri Düzey Hazır',
+        category: 'balanced',
+        description: 'Öğrenciniz psikolojik, bilişsel ve öz-düzenleme açısından dengeli ve sağlam bir profil sergiliyor. Mevcut hedeflere ulaşmak için stratejik destek ve ileri düzey koçluk yeterli olacaktır.',
+        recommendations: [
+            'İleri düzey problem çözme teknikleri',
+            'Olimpiyat ve yarışma soruları ile meydan okuma',
+            'Hız ve doğruluk optimizasyonu',
+            'Stratejik sınav teknikleri ve zaman yönetimi'
+        ],
+        duration: '6-8 Haftalık İleri Düzey Koçluk',
+        priority: 'low',
+        color: 'from-green-500 to-emerald-600',
+        icon: <CheckCircle className="w-10 h-10 text-white" />
+    };
 };
 
 const AnalysisWizard: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
     const [currentStep, setCurrentStep] = useState(0);
-    const [answers, setAnswers] = useState<Answer[]>([]);
+    const [answers, setAnswers] = useState<QuestionOption[]>([]);
     const [showResult, setShowResult] = useState(false);
-    const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
+    const [scores, setScores] = useState<CategoryScores>({ anxiety: 0, foundation: 0, focus: 0 });
 
     if (!isOpen) return null;
 
-    const handleAnswer = (value: string, label: string) => {
-        const newAnswers = [...answers, { questionId: questions[currentStep].id, value, label }];
+    const handleAnswer = (option: QuestionOption) => {
+        const newAnswers = [...answers, option];
         setAnswers(newAnswers);
 
-        setSlideDirection('right');
+        // Update scores
+        const newScores = { ...scores };
+        if (option.scores.anxiety) newScores.anxiety += option.scores.anxiety;
+        if (option.scores.foundation) newScores.foundation += option.scores.foundation;
+        if (option.scores.focus) newScores.focus += option.scores.focus;
+        setScores(newScores);
+
         setTimeout(() => {
             if (currentStep < questions.length - 1) {
                 setCurrentStep(currentStep + 1);
@@ -130,11 +263,17 @@ const AnalysisWizard: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
     const handleBack = () => {
         if (currentStep > 0) {
-            setSlideDirection('left');
-            setTimeout(() => {
-                setCurrentStep(currentStep - 1);
-                setAnswers(answers.slice(0, -1));
-            }, 150);
+            const removedAnswer = answers[answers.length - 1];
+
+            // Revert scores
+            const newScores = { ...scores };
+            if (removedAnswer.scores.anxiety) newScores.anxiety -= removedAnswer.scores.anxiety;
+            if (removedAnswer.scores.foundation) newScores.foundation -= removedAnswer.scores.foundation;
+            if (removedAnswer.scores.focus) newScores.focus -= removedAnswer.scores.focus;
+            setScores(newScores);
+
+            setCurrentStep(currentStep - 1);
+            setAnswers(answers.slice(0, -1));
         }
     };
 
@@ -142,26 +281,22 @@ const AnalysisWizard: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
         setCurrentStep(0);
         setAnswers([]);
         setShowResult(false);
-        setSlideDirection('right');
+        setScores({ anxiety: 0, foundation: 0, focus: 0 });
     };
 
-    const result = showResult ? getAnalysisResult(answers) : null;
+    const result = showResult ? calculateDiagnosis(scores) : null;
     const progress = ((currentStep + 1) / questions.length) * 100;
 
     // Generate WhatsApp message
     const generateWhatsAppMessage = () => {
         if (!result) return '';
-        const gradeAnswer = answers.find(a => a.questionId === 'grade')?.label || '';
-        const difficultyAnswer = answers.find(a => a.questionId === 'difficulty')?.label || '';
+        return `Merhaba Şeyda Hocam, sitedeki Pedagojik Analiz Envanteri'ni tamamladık.
 
-        return `Merhaba Şeyda Hocam, sitedeki Matematik Başarı Analizi'ni yaptım.
+📋 Tanı Sonucu: ${result.title}
 
-📊 Analiz Sonucu:
-• Sınıf: ${gradeAnswer}
-• Zorluk: ${difficultyAnswer}
-• ${result.diagnosis}
+${result.description}
 
-Detaylı bilgi almak ve özel program oluşturmak istiyorum.`;
+Profesyonel destek programı oluşturmak ve detaylı görüşmek istiyoruz.`;
     };
 
     return (
@@ -173,7 +308,7 @@ Detaylı bilgi almak ve özel program oluşturmak istiyorum.`;
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -185,16 +320,16 @@ Detaylı bilgi almak ve özel program oluşturmak istiyorum.`;
                 {!showResult ? (
                     <>
                         {/* Progress Bar */}
-                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 pb-4">
+                        <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 p-6 pb-4">
                             <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-lg font-bold text-slate-800">Matematik Başarı Analizörü</h3>
+                                <h3 className="text-lg font-bold text-slate-800">Pedagojik Yeterlik Envanteri</h3>
                                 <span className="text-sm font-semibold text-indigo-600">
                                     {currentStep + 1} / {questions.length}
                                 </span>
                             </div>
                             <div className="h-2 bg-white rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-500 ease-out"
+                                    className="h-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 transition-all duration-500 ease-out"
                                     style={{ width: `${progress}%` }}
                                 />
                             </div>
@@ -202,27 +337,31 @@ Detaylı bilgi almak ve özel program oluşturmak istiyorum.`;
 
                         {/* Question Content */}
                         <div className="p-8">
-                            <div
-                                key={currentStep}
-                                className={`animate-slideIn${slideDirection === 'right' ? 'Right' : 'Left'}`}
-                            >
-                                <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-start gap-3">
-                                    <span className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-sm font-bold">
-                                        {currentStep + 1}
-                                    </span>
-                                    <span>{questions[currentStep].question}</span>
+                            <div key={currentStep} className="animate-slideInRight">
+                                {/* Domain Badge */}
+                                <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full mb-4 text-sm font-semibold">
+                                    <Brain className="w-4 h-4" />
+                                    {questions[currentStep].domain}
+                                </div>
+
+                                <h2 className="text-2xl font-bold text-slate-800 mb-3">
+                                    {questions[currentStep].question}
                                 </h2>
+
+                                <p className="text-sm text-slate-500 mb-6 italic">
+                                    {questions[currentStep].subtitle}
+                                </p>
 
                                 <div className="space-y-3">
                                     {questions[currentStep].options.map((option, idx) => (
                                         <button
                                             key={idx}
-                                            onClick={() => handleAnswer(option.value, option.label)}
-                                            className="w-full text-left px-6 py-4 bg-white border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 rounded-xl transition-all font-medium text-slate-700 hover:text-indigo-700 group"
+                                            onClick={() => handleAnswer(option)}
+                                            className="w-full text-left px-6 py-4 bg-white border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50 rounded-xl transition-all text-slate-700 hover:text-indigo-700 group"
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <span>{option.label}</span>
-                                                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                                            <div className="flex items-start justify-between gap-4">
+                                                <span className="flex-1">{option.text}</span>
+                                                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors flex-shrink-0 mt-0.5" />
                                             </div>
                                         </button>
                                     ))}
@@ -236,30 +375,73 @@ Detaylı bilgi almak ve özel program oluşturmak istiyorum.`;
                                     className="mt-6 flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
-                                    Geri
+                                    Önceki Soru
                                 </button>
                             )}
                         </div>
                     </>
                 ) : result && (
-                    <div className="p-8 text-center">
-                        {/* Success Icon */}
+                    <div className="p-8">
+                        {/* Result Icon */}
                         <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br ${result.color} mb-6 animate-bounce`}>
-                            <CheckCircle className="w-10 h-10 text-white" />
+                            {result.icon}
                         </div>
 
-                        {/* Diagnosis */}
+                        {/* Diagnosis Title */}
                         <h2 className="text-3xl font-bold text-slate-800 mb-4">
-                            {result.diagnosis}
+                            {result.title}
                         </h2>
 
+                        {/* Priority Badge */}
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 text-sm font-bold ${result.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                result.priority === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-green-100 text-green-700'
+                            }`}>
+                            {result.priority === 'high' ? '🔴 Yüksek Öncelik' :
+                                result.priority === 'medium' ? '🟡 Orta Öncelik' :
+                                    '🟢 Rutin Takip'}
+                        </div>
+
+                        {/* Description */}
                         <div className="bg-gradient-to-br from-slate-50 to-indigo-50 rounded-2xl p-6 mb-6 border border-slate-200">
-                            <p className="text-lg text-slate-700 leading-relaxed mb-4">
-                                {result.recommendation}
+                            <p className="text-lg text-slate-700 leading-relaxed mb-6">
+                                {result.description}
                             </p>
+
+                            {/* Recommendations */}
+                            <div className="space-y-3 mb-4">
+                                <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                                    <Target className="w-5 h-5 text-indigo-600" />
+                                    Önerilen Müdahale Strateji:
+                                </h4>
+                                <ul className="space-y-2">
+                                    {result.recommendations.map((rec, idx) => (
+                                        <li key={idx} className="flex items-start gap-2 text-slate-700">
+                                            <span className="text-indigo-600 mt-1">•</span>
+                                            <span>{rec}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
                             <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-indigo-200">
-                                <Target className="w-4 h-4 text-indigo-600" />
                                 <span className="text-sm font-semibold text-indigo-700">{result.duration}</span>
+                            </div>
+                        </div>
+
+                        {/* Category Scores Display */}
+                        <div className="grid grid-cols-3 gap-3 mb-6">
+                            <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 text-center">
+                                <p className="text-xs text-rose-600 mb-1">Kaygı</p>
+                                <p className="text-2xl font-bold text-rose-700">{scores.anxiety}</p>
+                            </div>
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+                                <p className="text-xs text-amber-600 mb-1">Temel</p>
+                                <p className="text-2xl font-bold text-amber-700">{scores.foundation}</p>
+                            </div>
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+                                <p className="text-xs text-blue-600 mb-1">Odak</p>
+                                <p className="text-2xl font-bold text-blue-700">{scores.focus}</p>
                             </div>
                         </div>
 
@@ -272,7 +454,7 @@ Detaylı bilgi almak ve özel program oluşturmak istiyorum.`;
                                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
                             >
                                 <MessageCircle className="w-5 h-5" />
-                                Analiz Sonucunu Şeyda Hocaya Gönder ve Çözüm Planla
+                                Pedagojik Analiz Sonucunu Şeyda Hocaya Gönder
                             </a>
 
                             <button
@@ -302,18 +484,11 @@ Detaylı bilgi almak ve özel program oluşturmak istiyorum.`;
           from { opacity: 0; transform: translateX(20px); }
           to { opacity: 1; transform: translateX(0); }
         }
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
         .animate-fadeIn {
           animation: fadeIn 0.2s ease-out;
         }
         .animate-slideInRight {
           animation: slideInRight 0.3s ease-out;
-        }
-        .animate-slideInLeft {
-          animation: slideInLeft 0.3s ease-out;
         }
       `}</style>
         </div>

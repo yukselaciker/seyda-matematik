@@ -10,7 +10,7 @@ const Services: React.FC<ServicesProps> = ({ onBookingClick }) => {
   const serviceCTAs = [
     { text: "📅 Birebir Ders Rezervasyonu Yap", subtext: "Esnek saatler, online veya yüz yüze" },
     { text: "🎯 LGS Paketini İncele", subtext: "Deneme sınavları dahil" },
-    { text: "💻 Online Ders Nasıl Çalışır?", subtext: "Teknik destek sağlanır" },
+    { text: "💻 Online Ders Nasıl Çalışır?", subtext: "Zoom + interaktif tahta ile" },
     { text: "📚 Özel Program Hakkında Bilgi Al", subtext: "Kişiselleştirilmiş çalışma planı" }
   ];
 
@@ -31,15 +31,15 @@ const Services: React.FC<ServicesProps> = ({ onBookingClick }) => {
           {SERVICES.map((service, index) => {
             const Icon = service.icon;
             return (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-slate-100 hover:border-indigo-200 flex flex-col"
               >
                 <div className="flex gap-6 items-start mb-6">
                   <div className="flex-shrink-0">
-                      <div className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm">
-                          <Icon className="h-8 w-8 text-indigo-600" />
-                      </div>
+                    <div className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-sm">
+                      <Icon className="h-8 w-8 text-indigo-600" />
+                    </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-slate-900 mb-3">{service.title}</h3>
@@ -48,7 +48,7 @@ const Services: React.FC<ServicesProps> = ({ onBookingClick }) => {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* NEW: Service CTA */}
                 <div className="mt-auto pt-6 border-t border-slate-100">
                   <button

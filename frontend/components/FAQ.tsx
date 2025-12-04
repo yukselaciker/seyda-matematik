@@ -26,7 +26,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: "Hangi sınıf seviyelerine ders veriyorsunuz?",
-    answer: "5, 6, 7 ve 8. sınıf öğrencilerine matematik dersi veriyorum. Ayrıca LGS hazırlık programım ile 8. sınıf öğrencilerine yoğun sınav hazırlığı desteği sağlıyorum. Her seviyeye özel materyaller ve çalışma planları kullanıyorum."
+    answer: "4. sınıftan 10. sınıfa kadar tüm öğrencilere matematik dersi veriyorum. Ayrıca LGS hazırlık programım ile 8. sınıf öğrencilerine yoğun sınav hazırlığı desteği sağlıyorum. Her seviyeye özel materyaller ve çalışma planları kullanıyorum."
   },
   {
     question: "Ders saatleri esnek mi?",
@@ -38,7 +38,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: "Kaç öğrenci ile aynı anda ders yapıyorsunuz?",
-    answer: "Sadece birebir dersler yapıyorum. Her öğrenciye %100 odaklanarak, kendi hızında ve öğrenme stiline uygun şekilde ders veriyorum. Grup dersleri yapmıyorum çünkü her öğrencinin ihtiyacı farklıdır."
+    answer: "Hem birebir hem de grup dersleri yapıyorum. Grup derslerimiz en fazla 3 kişilik küçük gruplardan oluşur. Birebir derslerde öğrenciye %100 odaklanırken, grup derslerinde arkadaşlarla birlikte öğrenme avantajı sunuyorum. Size en uygun olanı birlikte belirleriz."
   },
   {
     question: "Ödeme nasıl yapılıyor?",
@@ -99,8 +99,8 @@ const FAQ: React.FC = memo(() => {
 
               <div
                 className={`transition-all duration-300 ease-in-out ${openIndex === index
-                    ? 'max-h-96 opacity-100'
-                    : 'max-h-0 opacity-0'
+                  ? 'max-h-96 opacity-100'
+                  : 'max-h-0 opacity-0'
                   }`}
                 style={{ overflow: 'hidden' }}
               >

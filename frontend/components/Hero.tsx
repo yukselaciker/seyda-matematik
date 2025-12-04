@@ -31,7 +31,7 @@ const Hero: React.FC<HeroProps> = ({ onBookingClick }) => {
               Matematiği <span className="text-indigo-600">Anlaşılır</span> ve <span className="text-indigo-600">Kolay</span> Hâle Getiriyoruz
             </h1>
             <p className="mt-4 text-lg text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Kırıkkale Fen Lisesi ve Kırıkkale Üniversitesi mezunu olarak, öğrencilerimin sadece sınavlarda değil, öğrenme yolculuklarında da kendilerini güçlü hissetmelerini sağlıyorum.
+              7 yıllık öğretmenlik deneyimimle, öğrencilerimin sadece sınavlarda değil, öğrenme yolculuklarında da kendilerini güçlü hissetmelerini sağlıyorum.
             </p>
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
               <button

@@ -1,9 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Star, Quote } from 'lucide-react';
 import { TESTIMONIALS } from '../constants';
 
 const Testimonials: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   // Auto-scroll animation
   useEffect(() => {
@@ -15,6 +18,7 @@ const Testimonials: React.FC = () => {
     const scrollSpeed = 0.5;
 
     const scroll = () => {
+      if (isDragging) return;
       scrollPosition += scrollSpeed;
       if (scrollPosition >= scrollContainer.scrollWidth / 2) {
         scrollPosition = 0;
@@ -31,7 +35,10 @@ const Testimonials: React.FC = () => {
     // Pause on hover
     const handleMouseEnter = () => cancelAnimationFrame(animationId);
     const handleMouseLeave = () => {
-      animationId = requestAnimationFrame(scroll);
+      if (!isDragging) {
+        scrollPosition = scrollContainer.scrollLeft;
+        animationId = requestAnimationFrame(scroll);
+      }
     };
 
     scrollContainer.addEventListener('mouseenter', handleMouseEnter);
@@ -43,7 +50,30 @@ const Testimonials: React.FC = () => {
       scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
       scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [isDragging]);
+
+  // Mouse drag handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainer.offsetLeft);
+    setScrollLeft(scrollContainer.scrollLeft);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+    const x = e.pageX - scrollContainer.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollContainer.scrollLeft = scrollLeft - walk;
+  };
 
   // Duplicate testimonials for infinite scroll effect
   const duplicatedTestimonials = [...TESTIMONIALS, ...TESTIMONIALS];
@@ -80,13 +110,17 @@ const Testimonials: React.FC = () => {
         {/* Scrolling Testimonials */}
         <div
           ref={scrollRef}
-          className="flex gap-6 overflow-x-auto scrollbar-hide pb-4"
+          className={`flex gap-6 overflow-x-auto scrollbar-hide pb-4 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onMouseMove={handleMouseMove}
         >
           {duplicatedTestimonials.map((item, index) => (
             <div
               key={index}
-              className="flex-shrink-0 w-80 bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col relative"
+              className="flex-shrink-0 w-80 bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col relative select-none"
             >
               <Quote className="absolute top-4 right-4 h-6 w-6 text-indigo-100" />
 
@@ -132,11 +166,6 @@ const Testimonials: React.FC = () => {
             </div>
           ))}
         </div>
-
-        {/* Scroll hint */}
-        <p className="text-center text-sm text-slate-400 mt-4">
-          ← Kaydırarak daha fazla görüş okuyun →
-        </p>
       </div>
     </section>
   );

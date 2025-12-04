@@ -62,7 +62,7 @@ export const FEATURES: FeatureItem[] = [
 
 export const TESTIMONIALS: TestimonialItem[] = [
   {
-    name: "Öğrenci",
+    name: "Efe",
     role: "LGS Öğrencisi",
     message: "Hocam coook tesekkur ederım 35den 92 cıkmak sızın sayenızde cok tesekkur ederım.",
     grades: ["Matematik: 92", "Önceki Not: 35"]
@@ -74,25 +74,25 @@ export const TESTIMONIALS: TestimonialItem[] = [
     grades: ["Matematik: 100", "Müzik: 100", "Seçmeli: 100", "Sosyal: 95"]
   },
   {
-    name: "Zehra'nın Velisi",
+    name: "Zehra Hanım",
     role: "Veli",
     message: "Hocam merhaba.. Zehra'nın sınavı açıklandı.. Veeee 98 almış.. Emeğinize sağlık..",
     grades: ["Matematik: 98"]
   },
   {
-    name: "Mehmet Ali Sudem'in Velisi",
+    name: "Sudem Hanım",
     role: "Veli",
     message: "Matematik bizkide 100 emegınıze saglık 🙏",
     grades: ["Matematik: 100"]
   },
   {
-    name: "Erol Atlas (atlAsya)",
+    name: "Erol Bey",
     role: "Veli",
     message: "Erol Atlas matematik 100, Fen bilimleri 100, sosyal bilgiler 95 şimdilik açıklananlar bunlar 🤩🥳",
     grades: ["Matematik: 100", "Fen: 100", "Sosyal: 95"]
   },
   {
-    name: "Fatma'nın Velisi",
+    name: "Fatma Hanım",
     role: "Veli",
     message: "Fen 100 Matematik 100 hocam 🙏",
     grades: ["Matematik: 100", "Fen: 100"]
@@ -104,19 +104,19 @@ export const TESTIMONIALS: TestimonialItem[] = [
     grades: ["Matematik: 100", "Fen: 90"]
   },
   {
-    name: "Öğrenci",
+    name: "Elif",
     role: "Öğrenci",
     message: "Matematikten 100 aldım hocam. Emekleriniz için teşekkür ederim 💫😍",
     grades: ["Matematik: 100"]
   },
   {
-    name: "Ceren Gulnergiz",
+    name: "Ceren Hanım",
     role: "Veli",
     message: "Merhaba Oğuz Ata Türkçe 95 Mat 86 Fen 95 ingilizce 92",
     grades: ["Matematik: 86", "Türkçe: 95", "Fen: 95"]
   },
   {
-    name: "Veli",
+    name: "Ayşe Hanım",
     role: "Veli",
     message: "90 üstü bekliyormuş konuştum teşekkür ederim.",
     grades: ["Beklenti: 90+"]

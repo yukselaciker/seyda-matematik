@@ -27,6 +27,7 @@ import BookingModal from './components/BookingModal';
 import FAQ from './components/FAQ';
 import CommonMistakes from './components/CommonMistakes';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import CookieBanner from './components/CookieBanner';
 
 // Error Boundary
 import ErrorBoundary from './components/ErrorBoundary';
@@ -103,6 +104,7 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <ToastProvider>
         <AppContent />
+        <CookieBanner />
       </ToastProvider>
     </ErrorBoundary>
   );

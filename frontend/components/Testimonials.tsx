@@ -4,121 +4,40 @@ import { TESTIMONIALS } from '../constants';
 
 const Testimonials: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const animationRef = useRef<number>();
+  const [isPaused, setIsPaused] = useState(false);
 
-  // Smooth auto-scroll animation
+  // Simple auto-scroll without drag
   useEffect(() => {
     const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+    if (!scrollContainer || isPaused) return;
 
-    let scrollPosition = 0;
-    const scrollSpeed = 0.3; // Slower for smoother experience
+    let animationId: number;
+    const scrollSpeed = 0.5;
 
     const scroll = () => {
-      if (isDragging || isHovered) {
-        animationRef.current = requestAnimationFrame(scroll);
-        return;
-      }
-
-      scrollPosition += scrollSpeed;
-
-      // Loop back to start when reaching halfway
-      if (scrollPosition >= scrollContainer.scrollWidth / 2) {
-        scrollPosition = 0;
+      if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
+        // Reset to beginning without animation
         scrollContainer.scrollLeft = 0;
       } else {
-        scrollContainer.scrollLeft = scrollPosition;
+        scrollContainer.scrollLeft += scrollSpeed;
       }
-
-      animationRef.current = requestAnimationFrame(scroll);
+      animationId = requestAnimationFrame(scroll);
     };
 
-    // Start animation after a delay
     const timeoutId = setTimeout(() => {
-      animationRef.current = requestAnimationFrame(scroll);
+      animationId = requestAnimationFrame(scroll);
     }, 1000);
 
     return () => {
       clearTimeout(timeoutId);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
       }
     };
-  }, [isDragging, isHovered]);
+  }, [isPaused]);
 
-  // Mouse drag handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    setIsDragging(true);
-    setStartX(e.pageX - scrollContainer.offsetLeft);
-    setScrollLeft(scrollContainer.scrollLeft);
-    scrollContainer.style.cursor = 'grabbing';
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    const scrollContainer = scrollRef.current;
-    if (scrollContainer) {
-      scrollContainer.style.cursor = 'grab';
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    const x = e.pageX - scrollContainer.offsetLeft;
-    const walk = (x - startX) * 1.5; // Multiplier for sensitivity
-    scrollContainer.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      const scrollContainer = scrollRef.current;
-      if (scrollContainer) {
-        scrollContainer.style.cursor = 'grab';
-      }
-    }
-    setIsHovered(false);
-  };
-
-  // Touch handlers for mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - scrollContainer.offsetLeft);
-    setScrollLeft(scrollContainer.scrollLeft);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
-
-    const x = e.touches[0].pageX - scrollContainer.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    scrollContainer.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  // Duplicate testimonials for infinite scroll effect
-  const duplicatedTestimonials = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
+  // Duplicate testimonials for infinite scroll
+  const duplicatedTestimonials = [...TESTIMONIALS, ...TESTIMONIALS];
 
   return (
     <section id="testimonials" className="py-20 bg-gradient-to-b from-indigo-50 to-white overflow-hidden">
@@ -149,30 +68,24 @@ const Testimonials: React.FC = () => {
           </p>
         </div>
 
-        {/* Scrolling Testimonials */}
+        {/* Scrolling Testimonials - Simple approach */}
         <div
           ref={scrollRef}
-          className="flex gap-6 overflow-x-auto pb-4 cursor-grab select-none"
+          className="flex gap-6 overflow-x-scroll pb-4 snap-x snap-mandatory"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-            scrollBehavior: 'auto'
+            WebkitOverflowScrolling: 'touch'
           }}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onMouseMove={handleMouseMove}
-          onMouseEnter={() => setIsHovered(true)}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
         >
           {duplicatedTestimonials.map((item, index) => (
             <div
               key={index}
-              className="flex-shrink-0 w-80 bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-100 flex flex-col relative"
-              style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
+              className="flex-shrink-0 w-80 bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-100 flex flex-col relative snap-start"
             >
               <Quote className="absolute top-4 right-4 h-6 w-6 text-indigo-100" />
 
@@ -196,7 +109,10 @@ const Testimonials: React.FC = () => {
                   {item.grades.slice(0, 2).map((grade, gIndex) => (
                     <span
                       key={gIndex}
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${grade.includes('100') || grade.includes('9') ? 'bg-green-100 text-green-700' : 'bg-indigo-50 text-indigo-700'}`}
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${grade.includes('100') || grade.includes('9')
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-indigo-50 text-indigo-700'
+                        }`}
                     >
                       {grade}
                     </span>
@@ -219,8 +135,9 @@ const Testimonials: React.FC = () => {
           ))}
         </div>
 
+        {/* Hide scrollbar */}
         <style jsx>{`
-          .overflow-x-auto::-webkit-scrollbar {
+          div::-webkit-scrollbar {
             display: none;
           }
         `}</style>

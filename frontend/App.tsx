@@ -21,7 +21,6 @@ import Services from './components/Services';
 import Features from './components/Features';
 import Testimonials from './components/Testimonials';
 import Roadmap from './components/Roadmap';
-import WhatsAppTestimonials from './components/WhatsAppTestimonials';
 
 import Contact from './components/Contact';
 import Footer from './components/Footer';
@@ -31,6 +30,7 @@ import CommonMistakes from './components/CommonMistakes';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import CookieBanner from './components/CookieBanner';
 import NotFound from './components/NotFound';
+import MathQuiz from './components/MathQuiz';
 
 // Error Boundary
 import ErrorBoundary from './components/ErrorBoundary';
@@ -84,7 +84,7 @@ const AppContent: React.FC = () => {
         <Testimonials />
         <FAQ />
         <Roadmap />
-        <WhatsAppTestimonials />
+        <MathQuiz />
 
         <Contact />
       </main>

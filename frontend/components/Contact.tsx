@@ -260,6 +260,26 @@ const Contact: React.FC = () => {
           </div>
 
         </div>
+
+        {/* Google Maps Section */}
+        <div className="mt-16">
+          <h3 className="text-2xl font-bold text-slate-800 mb-6 text-center">📍 Konum</h3>
+          <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d97328.94428736906!2d33.51515!3d39.84683!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4082334e5b85b147%3A0x7f4c8c7fb3e8a45a!2sK%C4%B1r%C4%B1kkale%20Merkez%2C%20K%C4%B1r%C4%B1kkale!5e0!3m2!1str!2str!4v1234567890"
+              width="100%"
+              height="400"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="w-full"
+            ></iframe>
+          </div>
+          <p className="text-center text-sm text-slate-500 mt-4">
+            Kırıkkale Merkez & Online (Tüm Türkiye)
+          </p>
+        </div>
       </div>
     </section>
   );

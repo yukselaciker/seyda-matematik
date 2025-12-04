@@ -142,19 +142,11 @@ const Contact: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
             <h3 className="text-xl font-bold text-slate-900 mb-2">Mesaj Gönderin</h3>
 
-            {/* Trust Badges */}
+            {/* Trust Badge */}
             <div className="flex flex-wrap gap-4 mb-6 text-sm text-slate-600">
-              <div className="flex items-center gap-2">
-                <span className="text-green-600">⏱️</span>
-                <span>Ortalama yanıt: 2 saat</span>
-              </div>
               <div className="flex items-center gap-2">
                 <span className="text-blue-600">🔒</span>
                 <span>Bilgileriniz güvende</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-indigo-600">📞</span>
-                <span>Zorunlu satış yok</span>
               </div>
             </div>
 
@@ -248,7 +240,7 @@ const Contact: React.FC = () => {
                 {/* Privacy Notice */}
                 <div className="text-xs text-slate-500 text-center">
                   ✅ Gönder butonuna tıklayarak{' '}
-                  <a href="#" className="text-indigo-600 hover:underline">Gizlilik Politikası</a>'nı kabul ediyorsunuz
+                  <a href="/privacy-policy" className="text-indigo-600 hover:underline">Gizlilik Politikası</a>'nı kabul ediyorsunuz
                 </div>
 
                 <button

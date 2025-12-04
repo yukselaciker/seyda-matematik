@@ -108,9 +108,8 @@ const Pricing: React.FC = memo(() => {
           {pricingTiers.map((tier, index) => (
             <div
               key={index}
-              className={`relative bg-white rounded-2xl border-2 ${tier.borderColor} p-8 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
-                tier.popular ? 'ring-4 ring-indigo-100 shadow-xl' : 'shadow-lg'
-              }`}
+              className={`relative bg-white rounded-2xl border-2 ${tier.borderColor} p-8 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${tier.popular ? 'ring-4 ring-indigo-100 shadow-xl' : 'shadow-lg'
+                }`}
             >
               {/* Popular Badge */}
               {tier.popular && (
@@ -168,11 +167,10 @@ const Pricing: React.FC = memo(() => {
 
               {/* CTA Button */}
               <button
-                className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                  tier.popular
+                className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${tier.popular
                     ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 shadow-lg hover:shadow-xl'
                     : `${tier.bgColor} ${tier.color} hover:shadow-lg`
-                }`}
+                  }`}
               >
                 Paketi Seç
                 <ArrowRight className="w-5 h-5" />
@@ -192,7 +190,7 @@ const Pricing: React.FC = memo(() => {
                 İlk Ders Ücretsiz
               </h4>
               <p className="text-sm text-slate-600">
-                Tüm paketlerde 30 dakika deneme dersi
+                Tüm paketlerde 1 saat deneme dersi
               </p>
             </div>
             <div>

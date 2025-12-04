@@ -6,8 +6,8 @@ const Testimonials: React.FC = () => {
   return (
     <section id="testimonials" className="py-20 bg-gradient-to-b from-indigo-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Stats Section - NEW */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <div className="bg-white rounded-2xl p-6 text-center shadow-lg border border-indigo-100">
             <div className="text-4xl font-bold text-indigo-600 mb-2">150+</div>
             <p className="text-sm text-slate-600">Mutlu Öğrenci</p>
@@ -19,10 +19,6 @@ const Testimonials: React.FC = () => {
           <div className="bg-white rounded-2xl p-6 text-center shadow-lg border border-amber-100">
             <div className="text-4xl font-bold text-amber-600 mb-2">%92</div>
             <p className="text-sm text-slate-600">LGS Başarı Oranı</p>
-          </div>
-          <div className="bg-white rounded-2xl p-6 text-center shadow-lg border border-blue-100">
-            <div className="text-4xl font-bold text-blue-600 mb-2">2 saat</div>
-            <p className="text-sm text-slate-600">Ortalama Yanıt Süresi</p>
           </div>
         </div>
 
@@ -38,12 +34,12 @@ const Testimonials: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {TESTIMONIALS.map((item, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col relative"
             >
               <Quote className="absolute top-6 right-6 h-8 w-8 text-indigo-100" />
-              
+
               <div className="mb-6">
                 <div className="flex space-x-1 mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -62,9 +58,9 @@ const Testimonials: React.FC = () => {
               {item.grades && item.grades.length > 0 && (
                 <div className="mb-6 flex flex-wrap gap-2">
                   {item.grades.map((grade, gIndex) => (
-                    <span 
-                        key={gIndex} 
-                        className={`text-xs font-bold px-3 py-1 rounded-full ${grade.includes('100') || grade.includes('9') ? 'bg-green-100 text-green-700' : 'bg-indigo-50 text-indigo-700'}`}
+                    <span
+                      key={gIndex}
+                      className={`text-xs font-bold px-3 py-1 rounded-full ${grade.includes('100') || grade.includes('9') ? 'bg-green-100 text-green-700' : 'bg-indigo-50 text-indigo-700'}`}
                     >
                       {grade}
                     </span>

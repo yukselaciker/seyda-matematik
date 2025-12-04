@@ -7,9 +7,10 @@
  * - ErrorBoundary (catches React crashes)
  * - Toast notifications
  * - Public landing page with sections
+ * - Simple routing for Privacy Policy
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { MessageCircle } from 'lucide-react';
 
 // Pages & Components
@@ -25,6 +26,7 @@ import Footer from './components/Footer';
 import BookingModal from './components/BookingModal';
 import FAQ from './components/FAQ';
 import CommonMistakes from './components/CommonMistakes';
+import PrivacyPolicy from './components/PrivacyPolicy';
 
 // Error Boundary
 import ErrorBoundary from './components/ErrorBoundary';
@@ -36,18 +38,33 @@ import { ToastProvider } from './contexts/ToastContext';
 const AppContent: React.FC = () => {
   // State
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  // Listen for navigation changes
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // --- BOOKING MODAL ---
   const openBooking = useCallback(() => setIsBookingOpen(true), []);
   const closeBooking = useCallback(() => setIsBookingOpen(false), []);
 
+  // --- PRIVACY POLICY PAGE ---
+  if (currentPath === '/privacy-policy') {
+    return <PrivacyPolicy />;
+  }
+
   // --- RENDER LANDING PAGE ---
   const renderLandingPage = useMemo(() => (
     <div className="min-h-screen bg-white relative">
-      <Navbar 
+      <Navbar
         onBookingClick={openBooking}
       />
-      
+
       <main>
         <Hero onBookingClick={openBooking} />
         <About />

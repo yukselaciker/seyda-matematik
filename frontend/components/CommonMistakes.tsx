@@ -175,7 +175,7 @@ const CommonMistakes: React.FC = memo(() => {
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-[#1C2A5E] to-indigo-700 rounded-2xl p-10 text-center text-white">
           <h3 className="text-3xl font-bold mb-4">
-            Çocuğunuz Bu Hatalardan Kaçının!
+            Çocuğunuzun Bu Hatalardan Kaçınmasını Sağlayın!
           </h3>
           <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
             Ücretsiz deneme dersinde öğrencinizin hangi hataları yaptığını tespit edelim ve kişisel çözüm planı oluşturalım.

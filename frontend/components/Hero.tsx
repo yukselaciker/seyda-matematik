@@ -41,33 +41,26 @@ const Hero: React.FC<HeroProps> = ({ onBookingClick }) => {
                 🎁 Ücretsiz Deneme Dersi Al
                 <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <a
-                href="#pricing"
-                onClick={(e) => handleScroll(e, 'pricing')}
-                className="inline-flex items-center justify-center px-8 py-4 border-2 border-indigo-600 text-base font-semibold rounded-xl text-indigo-600 bg-white hover:bg-indigo-50 transition-all shadow-sm hover:shadow-md cursor-pointer"
-              >
-                Fiyatları Gör
-              </a>
             </div>
             <p className="mt-4 text-sm text-slate-500 text-center lg:text-left">
-              ⏱️ 30 dakika, ücretsiz, yükümlülük yok • 🔒 Bilgileriniz güvende
+              ⏱️ 1 saat, ücretsiz, yükümlülük yok • 🔒 Bilgileriniz güvende
             </p>
           </div>
-          
+
           <div className="mt-12 lg:mt-0 relative">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border-8 border-white aspect-[4/5] sm:aspect-[4/3] lg:aspect-[4/5]">
               {/* 
                 SİSTEM İLK ÖNCE 'seyda.jpg' DOSYASINI ARAR.
                 EĞER BULAMAZSA OTOMATİK OLARAK YEDEK GÖRSELE DÖNER.
               */}
-              <img 
-                src="seyda.jpg" 
+              <img
+                src="seyda.jpg"
                 onError={(e) => {
                   // Fallback: Profesyonel öğretmen görseli
                   e.currentTarget.src = "https://images.unsplash.com/photo-1544717305-2782549b5136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-                  e.currentTarget.onerror = null; 
+                  e.currentTarget.onerror = null;
                 }}
-                alt="Şeyda Açıker" 
+                alt="Şeyda Açıker"
                 className="w-full h-full object-cover object-top transform hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent p-6 text-white">

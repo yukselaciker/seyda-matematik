@@ -30,7 +30,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: "Ders saatleri esnek mi?",
-    answer: "Kesinlikle! Hafta içi akşamları (14:00-21:00) ve hafta sonları (09:00-18:00) esnek saatler sunuyorum. Öğrencinizin okul programına ve ailenizin ihtiyaçlarına göre en uygun saatleri birlikte belirleriz."
+    answer: "Kesinlikle! Her gün 09:00-20:00 saatleri arasında esnek saatler sunuyorum. Öğrencinizin okul programına ve ailenizin ihtiyaçlarına göre en uygun saatleri birlikte belirleriz."
   },
   {
     question: "Ödev takibi yapılıyor mu?",

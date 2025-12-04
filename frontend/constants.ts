@@ -34,8 +34,8 @@ export const SERVICES: ServiceItem[] = [
 
 export const FEATURES: FeatureItem[] = [
   {
-    title: 'Güçlü Eğitim Geçmişi',
-    description: 'Kırıkkale Fen Lisesi ve Kırıkkale Üniversitesi mezunu bir öğretmen olarak sağlam akademik temel sunuyorum.',
+    title: 'Pedagojik Yaklaşım',
+    description: 'Matematik eğitiminde uzmanlaşmış, her öğrencinin öğrenme tarzına göre uyarlanmış etkili öğretim yöntemleri kullanıyorum.',
     icon: BookOpen,
   },
   {

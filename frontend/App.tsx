@@ -10,8 +10,16 @@
  * - Simple routing for Privacy Policy
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MessageCircle } from 'lucide-react';
+
+// Add global style for scroll offset
+const globalStyles = `
+  section[id] {
+    scroll-margin-top: 100px;
+  }
+`;
+
 
 // Pages & Components
 import Navbar from './components/Navbar';
@@ -111,7 +119,13 @@ const AppContent: React.FC = () => {
   ), [isBookingOpen, isWizardOpen, openBooking, closeBooking, openWizard, closeWizard]);
 
   // --- MAIN RENDER ---
-  return renderLandingPage;
+  return (
+    <>
+      <style>{globalStyles}</style>
+      {renderLandingPage}
+      <CookieBanner />
+    </>
+  );
 };
 
 // --- MAIN APP WITH PROVIDERS ---
@@ -120,7 +134,6 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <ToastProvider>
         <AppContent />
-        <CookieBanner />
       </ToastProvider>
     </ErrorBoundary>
   );

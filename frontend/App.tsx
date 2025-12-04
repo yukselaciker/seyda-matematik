@@ -20,6 +20,8 @@ import About from './components/About';
 import Services from './components/Services';
 import Features from './components/Features';
 import Testimonials from './components/Testimonials';
+import Roadmap from './components/Roadmap';
+import WhatsAppTestimonials from './components/WhatsAppTestimonials';
 
 import Contact from './components/Contact';
 import Footer from './components/Footer';
@@ -81,6 +83,8 @@ const AppContent: React.FC = () => {
         <Features />
         <Testimonials />
         <FAQ />
+        <Roadmap />
+        <WhatsAppTestimonials />
 
         <Contact />
       </main>

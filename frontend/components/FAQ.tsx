@@ -22,7 +22,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: "Deneme dersi ücretsiz mi?",
-    answer: "Evet! İlk 30 dakikalık tanışma dersi tamamen ücretsizdir. Bu derste öğrencinizin seviyesini tespit eder, eksik konuları belirler ve kişisel çalışma planı oluştururuz. Hiçbir ödeme veya yükümlülük gerektirmez."
+    answer: "Evet! İlk 1 saatlik tanışma dersi tamamen ücretsizdir. Bu derste öğrencinizin seviyesini tespit eder, eksik konuları belirler ve kişisel çalışma planı oluştururuz. Hiçbir ödeme veya yükümlülük gerektirmez."
   },
   {
     question: "Hangi sınıf seviyelerine ders veriyorsunuz?",
@@ -96,13 +96,12 @@ const FAQ: React.FC = memo(() => {
                   )}
                 </div>
               </button>
-              
+
               <div
-                className={`transition-all duration-300 ease-in-out ${
-                  openIndex === index
+                className={`transition-all duration-300 ease-in-out ${openIndex === index
                     ? 'max-h-96 opacity-100'
                     : 'max-h-0 opacity-0'
-                }`}
+                  }`}
                 style={{ overflow: 'hidden' }}
               >
                 <div className="px-6 pb-5 pt-2">

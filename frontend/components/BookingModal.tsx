@@ -34,7 +34,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
       <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
         <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-100">
-          
+
           {/* Close Button */}
           <div className="absolute right-4 top-4 z-10">
             <button
@@ -55,7 +55,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             <h3 className="text-2xl font-bold text-slate-900 mb-3" id="modal-title">
               Demo Ders Randevusu
             </h3>
-            
+
             <p className="text-slate-600 mb-6">
               Ücretsiz tanışma ve seviye belirleme dersi için WhatsApp üzerinden hızlıca randevu alabilirsiniz.
             </p>
@@ -67,7 +67,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                   <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
-                  <span className="text-sm text-slate-700">Ücretsiz 30 dakika tanışma dersi</span>
+                  <span className="text-sm text-slate-700">Ücretsiz 1 saat tanışma dersi</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -98,8 +98,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             {/* Alternative */}
             <div className="mt-4 pt-4 border-t border-slate-100">
               <p className="text-xs text-slate-500 mb-2">veya doğrudan arayın:</p>
-              <a 
-                href="tel:+905337652071" 
+              <a
+                href="tel:+905337652071"
                 className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
               >
                 <Phone className="w-4 h-4" />

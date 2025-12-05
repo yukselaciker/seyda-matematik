@@ -5,6 +5,8 @@
  * - Reduces friction by answering objections
  * - Builds trust through transparency
  * - Improves SEO with question-based keywords
+ * 
+ * Last updated: 2025-12-05 - Kırıkkale location confirmed
  */
 
 import React, { useState, memo } from 'react';

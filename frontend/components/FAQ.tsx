@@ -18,7 +18,7 @@ interface FAQItem {
 const faqData: FAQItem[] = [
   {
     question: "Dersler online mı yoksa yüz yüze mi?",
-    answer: "Her iki seçenek de mevcut. Online dersler Zoom üzerinden interaktif tahta ile yapılır ve yüz yüze derslerle aynı kalitededir. Yüz yüze dersler İstanbul Avrupa yakasında gerçekleşir. Sizin için en uygun olanı birlikte belirleriz."
+    answer: "Her iki seçenek de mevcut. Online dersler Zoom üzerinden interaktif tahta ile yapılır ve yüz yüze derslerle aynı kalitededir. Yüz yüze dersler Kırıkkale'de gerçekleşir. Sizin için en uygun olanı birlikte belirleriz."
   },
   {
     question: "Deneme dersi ücretsiz mi?",
